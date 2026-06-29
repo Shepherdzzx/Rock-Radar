@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rock Radar - 战力雷达图</title>
+    <title>Game Radar - 游戏评测雷达图</title>
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap");
         /* 引入鸿蒙字体 (使用更稳定的全局地址) */
@@ -56,64 +56,67 @@
             100% { background-position: 0% 50%; }
         }
 
-        .container { 
-            position: relative; 
-            z-index: 2; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            height: 100vh; 
-            padding: 1vh 1vw; 
+        .container {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            padding: 0;
         }
 
         .main-layout {
             display: flex;
-            width: 98%;
-            max-width: 1700px;
-            height: 94vh;
+            flex-direction: column;
+            width: min(100vw, calc(100vh * 9 / 16));
+            height: 100vh;
             position: relative;
         }
 
-        .left-panel { 
-            flex: 1.3; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
+        .top-panel {
+            flex: 0 0 40vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             position: relative;
-            overflow: visible; /* 允许雷达图辉光溢出 */
+            overflow: hidden;
         }
 
-        #radarCanvas { 
-            width: 100%; 
-            max-width: 900px;
-            height: auto; 
+        .middle-panel {
+            flex: 0 0 40vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: visible;
+        }
+
+        #radarCanvas {
+            width: min(90%, 37vh);
+            height: auto;
             aspect-ratio: 1/1;
-            /* 1.6 倍放大使得内部逻辑长宽增加 60% 后，能包容哪怕是 20 分这样的越界图像，且最终在屏幕上的视觉大小依然和原先严格一致 */
-            transform: scale(1.6); 
+            transform: scale(1.3);
+            max-width: 600px;
         }
 
-        .right-panel { 
-            flex: 0.7; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            padding: 0 10px;
-            margin-left: 5vw; /* 向右移动一点 */
-        }
-
-        .band-info-box {
+        .bottom-panel {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 35px;
+            justify-content: center;
+            align-items: center;
+            padding: 1vh 2vw;
+            gap: 1.2vh;
         }
 
-        .band-name { 
-            font-family: "Orbitron", sans-serif;
-            font-size: 3rem; 
-            font-weight: 900; 
-            color: var(--theme-color); 
-            text-shadow: 0 0 15px var(--theme-color);
-            transition: all 2s ease; /* 名字颜色和发光慢速切换 */
+        .game-name {
+            font-family: "Orbitron", "HarmonyOS Sans SC", sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 8px var(--theme-color);
+            transition: all 2s ease;
             animation: nameEntrance 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
         }
 
@@ -122,19 +125,17 @@
             100% { opacity: 1; transform: scale(1) translateZ(0); filter: blur(0); }
         }
 
-        .band-photo-container {
-            width: 100%;
-            height: 380px; 
-            background: transparent;
-            overflow: hidden;
+        .game-photo-container {
+            width: 90%;
+            height: 100%;
             display: flex;
             align-items: center;
-            justify-content: flex-start;
-            transition: all 2s ease;
+            justify-content: center;
+            overflow: hidden;
             perspective: 1200px;
         }
 
-        .band-photo {
+        .game-photo {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
@@ -143,18 +144,66 @@
             transition: opacity 1.2s ease, transform 1.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .band-desc-container {
-            align-self: flex-start;
+        /* Grade badges row */
+        .grade-badges-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5vw;
+            width: 100%;
+            transition: opacity 0.5s ease;
+        }
+
+        .grade-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            min-width: 48px;
+        }
+
+        .grade-badge .grade-letter {
+            font-family: "Orbitron", sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--theme-color);
+            text-shadow: 0 0 10px var(--theme-color);
+            transition: all 2s ease;
+        }
+
+        .grade-badge .grade-dim-name {
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.6);
+            white-space: nowrap;
+        }
+
+        /* Overall grade display */
+        .overall-grade {
+            font-family: "Orbitron", sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--theme-color);
+            text-shadow: 0 0 20px var(--theme-color), 0 0 40px var(--theme-color);
+            transition: all 2s ease;
+            animation: overallEntrance 1.2s cubic-bezier(0.23, 1, 0.32, 1) 0.15s forwards;
+        }
+
+        @keyframes overallEntrance {
+            0% { opacity: 0; transform: scale(0.3); filter: blur(10px); }
+            100% { opacity: 1; transform: scale(1); filter: blur(0); }
+        }
+
+        .game-desc-container {
             display: inline-block;
-            padding: 25px 40px;
+            padding: 8px 20px;
             background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border-radius: 12px;
-            transition: all 2s ease; /* 边框色变色慢速切换 */
-            max-width: 95%; 
-            opacity: 0; /* 默认隐藏，由动画控制显示 */
-            animation: descEntrance 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 8px;
+            transition: all 2s ease;
+            max-width: 90%;
+            opacity: 0;
+            animation: descEntrance 1s ease-out 0.3s both;
         }
 
         @keyframes descEntrance {
@@ -162,28 +211,11 @@
             100% { opacity: 1; transform: scale(1) translateZ(0); }
         }
 
-        .band-desc { 
-            font-size: 1.8rem; 
-            line-height: 1.3; 
-            color: rgba(255, 255, 255, 0.9); 
+        .game-desc {
+            font-size: 1.2rem;
+            line-height: 1.3;
+            color: rgba(255, 255, 255, 0.85);
             transition: all 2s ease;
-        }
-
-        .progress-bar-container {
-            position: absolute;
-            bottom: -20px;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: rgba(255,255,255,0.05);
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: var(--theme-color);
-            box-shadow: 0 0 20px var(--theme-color);
-            transition: background 2s ease, box-shadow 2s ease;
-            width: 0%;
         }
 
         /* 底部全局进度条 */
@@ -280,52 +312,51 @@
         :fullscreen body { cursor: none; }
         :fullscreen .global-timeline-container,
         :fullscreen #globalTimeline,
-        :fullscreen .progress-bar-container,
-        :fullscreen .session-timer { 
-            display: none !important; 
+        :fullscreen .session-timer {
+            display: none !important;
         }
 
-        .fade-out { 
-            opacity: 0; 
-            transform: scale(0.8) translateZ(-100px); 
+        .fade-out {
+            opacity: 0;
+            transform: scale(0.8) translateZ(-100px);
             transition: all 0.5s ease-in;
         }
 
-        /* MVP 乐队底图容器 */
-        .mvp-bg-container {
+        /* 特色游戏底图容器 */
+        .featured-bg-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            z-index: 1; /* 在背景渐变之上，在容器 container 之下 */
+            z-index: 1;
             pointer-events: none;
             overflow: hidden;
         }
 
-        .mvp-bg-image {
+        .featured-bg-image {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: contain; /* 改为 contain，防止裁切 */
-            object-position: left center; /* 靠左对齐 */
+            object-fit: contain;
+            object-position: left center;
             -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0) 100%);
             mask-image: linear-gradient(to right, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0) 100%);
             transition: transform 2.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 2.5s ease;
-            transform: translateX(-100%); /* 初始在左侧外部 */
+            transform: translateX(-100%);
             opacity: 0;
         }
 
-        .mvp-bg-image.active {
+        .featured-bg-image.active {
             opacity: 1;
-            transform: translateX(0); /* 滑动到原位即左侧对齐 */
+            transform: translateX(0);
         }
 
-        .mvp-bg-image.exit {
-            transform: translateX(0); /* 退出时不移动位置 */
-            opacity: 0; /* 仅逐渐消失 */
+        .featured-bg-image.exit {
+            transform: translateX(0);
+            opacity: 0;
         }
     </style>
 </head>
@@ -333,30 +364,27 @@
     <audio id="bgMusic" src="music.mp3"></audio>
     <div id="introOverlay"></div>
 
-    <div id="mvpBgContainer" class="mvp-bg-container"></div>
+    <div id="featuredBgContainer" class="featured-bg-container"></div>
 
     <canvas id="particles-canvas"></canvas>
     <div class="session-timer" id="sessionTimer">00:00:00</div>
 
     <div class="container">
         <div class="main-layout">
-            <div class="left-panel">
+            <div class="top-panel">
+                <div class="game-photo-container" id="photoContainer">
+                    <img id="gamePhoto" class="game-photo" src="" alt="">
+                </div>
+            </div>
+            <div class="middle-panel">
                 <canvas id="radarCanvas" width="1600" height="1600"></canvas>
             </div>
-            <div class="right-panel">
-                <div class="band-info-box">
-                    <div class="band-name" id="bandName"></div>
-                    
-                    <div class="band-photo-container" id="photoContainer">
-                        <img id="bandPhoto" class="band-photo" src="" alt="">
-                    </div>
-
-                    <div class="band-desc-container">
-                        <div class="band-desc" id="bandDesc"></div>
-                    </div>
-                </div>
-                <div class="progress-bar-container">
-                    <div class="progress-bar" id="progressBar"></div>
+            <div class="bottom-panel">
+                <div class="game-name" id="gameName"></div>
+                <div class="grade-badges-row" id="gradeBadgesRow"></div>
+                <div class="overall-grade" id="overallGrade"></div>
+                <div class="game-desc-container" id="descContainer">
+                    <div class="game-desc" id="gameDesc"></div>
                 </div>
             </div>
         </div>
@@ -399,34 +427,28 @@
             RADAR_SCALE: 1.0,            // 雷达图底图大小缩放比例 (默认1.0)
             RADAR_GRID_LEVELS: 5,        // 雷达图底图行数（圈数）
             RADAR_GRID_LINE_WIDTH: 3,    // 雷达图底图线条粗细
-            RADAR_GRID_LINE_OPACITY: 0.2, // 雷达图底图线条透明度
-            PARTICLE_OPACITY_MULT: 2.0,  // 背景粒子特效透明度倍率
-            PARTICLE_SIZE_MULT: 2.0,     // 背景粒子特效大小倍率
-            VERTEX_COUNT: 6,             // 雷达图顶点数（默认为6边形，可改为8边形等）,一定要把DIM_NAMES等数组内容也改成对应的个数!
-            INTRO_WAIT_TIME: 1000, // 开头准备页等待时间 (ms)
+            RADAR_GRID_LINE_OPACITY: 0.15, // 雷达图底图线条透明度
+            PARTICLE_OPACITY_MULT: 1.2,  // 背景粒子特效透明度倍率
+            PARTICLE_SIZE_MULT: 1.2,     // 背景粒子特效大小倍率
+            VERTEX_COUNT: 6,             // 雷达图顶点数
+            INTRO_WAIT_TIME: 1000,       // 开头准备页等待时间 (ms)
 
             // 雷达图各个维度的名称
-            DIM_NAMES: ["创新性", "旋律", "歌词", "影响力", "主唱", "乐器"],
-            // 六个维度的满分基准线，每个维度可单独控制
-            BASE_MAX_SCORES: [10, 10, 10, 10, 10, 10], 
-            // 六个维度的允许最低分数，每个维度可单独控制
-            MIN_SCORES: [0, 0, 0, 0, 0, 0], 
+            DIM_NAMES: ["剧情", "玩法", "色气", "体量", "创新性", "CG质量"],
 
-            ANIM_DURATION: 1500, // 雷达各项数值生长动画的过渡时间 (ms)
+            // 字母评级对应的雷达图半径比例
+            GRADE_POSITIONS: { 'S': 0.9, 'A': 0.7, 'B': 0.5, 'C': 0.3, 'D': 0.1 },
 
-            // 是否启用特殊的数值格式化（如雷达图的实际值在 11-19 时显示为 "10+"）
-            ENABLE_SPECIAL_FORMAT: true, 
-            DEFAULT_DURATION: 5000, // 默认每页的的展示时长 (ms)
-            SHOW_DESC: true, // 是否显示描述文字(乐评)
-            IMAGE_SCALE: 1.0, // 图片默认缩放比例 (1.0 为原始大小)
+            // 满分基准（统一为1，对应半径的100%）
+            BASE_MAX_SCORES: [1, 1, 1, 1, 1, 1],
+            MIN_SCORES: [0, 0, 0, 0, 0, 0],
 
-            // 哪些维度显示为百分数（例如 0.7 变为 70%）。数组长度 6，true 表示显示为百分数，false 表示显示为普通数字
-            USE_PERCENTAGE: [false, false, false, false, false, false],
-            LABEL_MARGIN: 80, // 维度名称距离雷达图外圈的距离 (px)，默认 80
-            USE_AUTO_PRECISION: true, // 是否根据 points 中定义的位数自动控制显示精度（例如写 8.5 就显示 8.5，写 8 就显示整数）
-            SHOW_SCORE_UNDER_NAME: false, // 是否将评分数值显示在维度名称下方
-            LABEL_FONT_SIZE: 28,          // 维度名称字体大小 (px)
-            SCORE_FONT_SIZE: 24,          // 评分数值字体大小 (px)
+            ANIM_DURATION: 1500,         // 雷达各项数值生长动画的过渡时间 (ms)
+            DEFAULT_DURATION: 8000,      // 默认每页的展示时长 (ms)
+            SHOW_DESC: true,             // 是否显示描述文字
+            LABEL_MARGIN: 60,            // 维度名称距离雷达图外圈的距离 (px)
+            LABEL_FONT_SIZE: 24,         // 维度名称字体大小 (px)
+            SCORE_FONT_SIZE: 22,         // 评分数值字体大小 (px)
         };
 
         function getNextColor() {
@@ -436,85 +458,57 @@
             return c;
         }
 
-        const mvplist = ["The Beatles"];
+        // 将字母评级映射为雷达图位置 (0-1 归一化值)
+        function gradeToPosition(grade) {
+            return CONFIG.GRADE_POSITIONS[grade] || 0;
+        }
 
-        // ["创新性", "旋律", "歌词", "影响力", "主唱", "乐器"]
-        // 可选属性: 
+        const featuredList = [];
+
+        // 游戏评测数据
+        // grades: [剧情, 玩法, 色气, 体量, 创新性, CG质量] 各维度字母评级 S/A/B/C/D
+        // overallGrade: 综合评级
+        // desc: 评测描述
         // colorIndex: 对应 COLOR_PRESETS 索引 (0-19)
         // duration: 该条目持续显示时间 (ms)，默认由 CONFIG.DEFAULT_DURATION 决定
-        const namelist = [
+        const gamelist = [
 
-{ name: "The Beatles", points: [15, 15, 10, 20, 10, 10], desc: "无需多言", colorIndex: 12 ,duration: 6000 },
-{ name: "Nirvana", points: [9, 8, 9, 12, 9, 7], desc: "xqcl" },
-{ name: "Radiohead", points: [13, 8, 9, 10, 8, 12], desc: "rym亲爹。我一直是idm粉丝啊" },
-{ name: "Bob Dylan", points: [14, 4, 15, 14, 1, 2], desc: "诺贝尔文学奖得主的含金量，要歌词有歌词，唱功有歌词" },
+{ name: "赛博朋克2077", grades: ['A', 'B', 'A', 'S', 'B', 'S'], overallGrade: 'A', desc: "夜之城的传奇，虽有缺陷但无可替代", colorIndex: 2, duration: 8000 },
+{ name: "Elden Ring", grades: ['B', 'S', 'C', 'S', 'S', 'S'], overallGrade: 'S', desc: "交界地的史诗，开放世界的标杆", colorIndex: 5, duration: 8000 },
+{ name: "原神", grades: ['S', 'A', 'S', 'S', 'A', 'S'], overallGrade: 'S', desc: "国产之光，持续进化的提瓦特", colorIndex: 0, duration: 8000 },
+{ name: "守望先锋", grades: ['C', 'S', 'A', 'B', 'A', 'S'], overallGrade: 'A', desc: "英雄永存，需要更多新内容", colorIndex: 3, duration: 8000 },
         ];
 
-        const bands = namelist.map(b => {
-            const preset = (b.colorIndex !== undefined) ? COLOR_PRESETS[b.colorIndex] : getNextColor();
-            
-            // 自动检测每个维度在 points 中定义的精度（小数位数）
-            const precisions = b.points.map(val => {
-                const s = val.toString();
-                const dotIdx = s.indexOf('.');
-                return dotIdx === -1 ? 0 : s.length - dotIdx - 1;
-            });
+        const games = gamelist.map(g => {
+            const preset = (g.colorIndex !== undefined) ? COLOR_PRESETS[g.colorIndex] : getNextColor();
 
             return {
-                ...b, 
-                precisions, 
-                isGoat: mvplist.includes(b.name),
-                duration: b.duration || CONFIG.DEFAULT_DURATION,
+                ...g,
+                // 将字母评级转换为归一化位置值用于雷达动画
+                points: g.grades.map(grade => gradeToPosition(grade)),
+                isFeatured: featuredList.includes(g.name),
+                duration: g.duration || CONFIG.DEFAULT_DURATION,
                 ...preset
             };
         });
 
         // 时间轴计算
-        let totalDuration = bands.reduce((acc, b) => acc + b.duration, 0);
+        let totalDuration = games.reduce((acc, g) => acc + g.duration, 0);
         let timeSegments = [];
         let accumulatedTime = 0;
-        bands.forEach((b, i) => {
-            timeSegments.push({ start: accumulatedTime, end: accumulatedTime + b.duration, bandIndex: i });
-            accumulatedTime += b.duration;
+        games.forEach((g, i) => {
+            timeSegments.push({ start: accumulatedTime, end: accumulatedTime + g.duration, gameIndex: i });
+            accumulatedTime += g.duration;
         });
 
         const ANIM_DURATION = CONFIG.ANIM_DURATION;
 
-        /**
-         * 格式化雷达图显示的数值标题
-         * @param {number} value - 原始雷达数值
-         * @param {number} index - 当前维度的索引（0-5）
-         * @returns {string|number} - 将要在图表上显示的文字
-         */
-        /**
-         * 格式化雷达图显示的数值标题
-         * @param {number} value - 原始雷达数值
-         * @param {number} index - 当前维度的索引（0-5）
-         * @returns {string|number} - 将要在图表上显示的文字
-         */
-        function formatRadarValue(value, index) {
-            // 获取当前乐队当前维度预期的精度
-            let precision = 0;
-            if (currentIndex !== -1 && bands[currentIndex]) {
-                precision = bands[currentIndex].precisions[index];
+        // 获取当前游戏的字母评级（用于雷达图标签显示）
+        function getGradeLabel(index) {
+            if (currentIndex !== -1 && games[currentIndex]) {
+                return games[currentIndex].grades[index];
             }
-
-            // 如果该维度需要显示为百分比
-            if (CONFIG.USE_PERCENTAGE && CONFIG.USE_PERCENTAGE[index]) {
-                let pctValue = value * 100;
-                return parseFloat(pctValue.toFixed(precision)).toString() + "%";
-            }
-
-            let displayValue = parseFloat(value.toFixed(precision)).toString();
-            
-            // 如果精度要求为0 (整数)，则显式进行四舍五入并支持 "10+" 特殊格式
-            if (precision === 0) {
-                let intVal = Math.round(value);
-                if (CONFIG.ENABLE_SPECIAL_FORMAT && intVal >= 11 && intVal <= 19) return "10+";
-                return intVal.toString();
-            }
-
-            return displayValue;
+            return '';
         }
 
         let currentIndex = -1;
@@ -522,7 +516,7 @@
         let globalCurrentTime = 0; // ms
         let isParticlesEnabled = true;
         let particleFadeLevel = 1; // 1 为完全显示，0 为完全消失
-        let isPaused = true; 
+        let isPaused = true;
         let isStarted = false; // 是否已经按过空格开始
         let lastTimestamp = 0;
 
@@ -607,8 +601,8 @@
                 pCtx.restore();
             }
         }
-        for(let i = 0; i < 50; i++) particles.push(new Particle("normal"));
-        for(let i = 0; i < 25; i++) particles.push(new Particle("nebula"));
+        for(let i = 0; i < 35; i++) particles.push(new Particle("normal"));
+        for(let i = 0; i < 15; i++) particles.push(new Particle("nebula"));
 
         function hexToRgbA(hex, alpha) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -637,149 +631,155 @@
         }
 
         function setProgressBar(duration) {
-            const bar = document.getElementById("progressBar");
-            bar.style.transition = 'none';
-            bar.style.width = '0%';
-            void bar.offsetWidth;
-            bar.style.transition = `width ${duration}ms linear, background 2s ease, box-shadow 2s ease`;
-            bar.style.width = '100%';
+            // 进度条已移除，保留空函数以防其他地方调用
         }
 
         /**
          * 调度并执行UI的淡出过渡，然后调用核心切换逻辑
-         * @param {Object} band - 即将展示的乐队数据对象
+         * @param {Object} game - 即将展示的游戏数据对象
          * @param {boolean} isFirst - 是否是初始首次加载
          */
-        function updateUI(band, isFirst = false) {
-            const nameEl = document.getElementById("bandName");
-            const depsEl = document.getElementById("bandDesc");
-            const containerEl = depsEl.parentElement;
-            const photoEl = document.getElementById("bandPhoto");
+        function updateUI(game, isFirst = false) {
+            const nameEl = document.getElementById(“gameName”);
+            const descContainer = document.getElementById(“descContainer”);
+            const overallEl = document.getElementById(“overallGrade”);
+            const badgesRow = document.getElementById(“gradeBadgesRow”);
+            const photoEl = document.getElementById(“gamePhoto”);
 
             if (!isFirst) {
                 nameEl.style.animation = 'none';
-                containerEl.style.animation = 'none';
-                nameEl.classList.add("fade-out");
-                containerEl.classList.add("fade-out");
-                photoEl.style.transform = "scale(0.3) translateZ(-500px)";
-                photoEl.style.opacity = "0";
+                descContainer.style.animation = 'none';
+                overallEl.style.animation = 'none';
+                nameEl.classList.add(“fade-out”);
+                descContainer.classList.add(“fade-out”);
+                overallEl.classList.add(“fade-out”);
+                badgesRow.style.opacity = “0”;
+                photoEl.style.transform = “scale(0.3) translateZ(-500px)”;
+                photoEl.style.opacity = “0”;
 
                 setTimeout(() => {
-                    performTransition(band, isFirst);
+                    performTransition(game, isFirst);
                 }, 500);
             } else {
-                performTransition(band, isFirst);
+                performTransition(game, isFirst);
             }
         }
 
         /**
          * 核心的视图与数据切换：更换文字、图片加载、应用主题色及计算雷达图目标分数
-         * @param {Object} band - 即将展示的乐队数据对象
+         * @param {Object} game - 即将展示的游戏数据对象
          * @param {boolean} isFirst - 是否是初始首次加载
          */
-        function performTransition(band, isFirst) {
-            const nameEl = document.getElementById("bandName");
-            const depsEl = document.getElementById("bandDesc");
-            const containerEl = depsEl.parentElement;
-            const photoContainer = document.querySelector(".band-photo-container");
-            const photoEl = document.getElementById("bandPhoto");
-            const mvpContainer = document.getElementById("mvpBgContainer");
+        function performTransition(game, isFirst) {
+            const nameEl = document.getElementById(“gameName”);
+            const descEl = document.getElementById(“gameDesc”);
+            const descContainer = document.getElementById(“descContainer”);
+            const overallEl = document.getElementById(“overallGrade”);
+            const badgesRow = document.getElementById(“gradeBadgesRow”);
+            const photoEl = document.getElementById(“gamePhoto”);
+            const featuredContainer = document.getElementById(“featuredBgContainer”);
 
-            targetThemeColor = band.color;
-            document.documentElement.style.setProperty('--theme-color', band.color);
-            document.documentElement.style.setProperty('--bg-color-1', band.bg1);
-            document.documentElement.style.setProperty('--bg-color-2', band.bg2);
+            targetThemeColor = game.color;
+            document.documentElement.style.setProperty('--theme-color', game.color);
+            document.documentElement.style.setProperty('--bg-color-1', game.bg1);
+            document.documentElement.style.setProperty('--bg-color-2', game.bg2);
 
-            nameEl.classList.remove("fade-out");
-            containerEl.classList.remove("fade-out");
+            nameEl.classList.remove(“fade-out”);
+            descContainer.classList.remove(“fade-out”);
+            overallEl.classList.remove(“fade-out”);
 
-            // 根据配置调整图片容器高度以改变“外界大小”
-            // 默认 380px 为 1.0 比例的基准高度
-            photoContainer.style.height = `${380 * CONFIG.IMAGE_SCALE}px`;
+            // 填充评级徽章
+            badgesRow.innerHTML = '';
+            CONFIG.DIM_NAMES.forEach((dimName, i) => {
+                const badge = document.createElement('div');
+                badge.className = 'grade-badge';
+                badge.innerHTML = `
+                    <span class=”grade-letter”>${game.grades[i]}</span>
+                    <span class=”grade-dim-name”>${dimName}</span>
+                `;
+                badgesRow.appendChild(badge);
+            });
+            badgesRow.style.opacity = “1”;
 
-            // MVP 底图逻辑
-            const isMvp = mvplist.includes(band.name);
-            const oldMvpImg = mvpContainer.querySelector(".mvp-bg-image.active");
-            
-            if (oldMvpImg) {
-                oldMvpImg.classList.remove("active");
-                oldMvpImg.classList.add("exit");
-                setTimeout(() => oldMvpImg.remove(), 2000);
+            // 总体评级
+            overallEl.textContent = game.overallGrade;
+
+            // 特色游戏底图逻辑
+            const isFeatured = featuredList.includes(game.name);
+            const oldFeaturedImg = featuredContainer.querySelector(“.featured-bg-image.active”);
+
+            if (oldFeaturedImg) {
+                oldFeaturedImg.classList.remove(“active”);
+                oldFeaturedImg.classList.add(“exit”);
+                setTimeout(() => oldFeaturedImg.remove(), 2000);
             }
 
-            if (isMvp) {
-                const img = document.createElement("img");
-                img.className = "mvp-bg-image";
-                img.src = ""; 
-                // 优先加载 webp 格式
+            if (isFeatured) {
+                const img = document.createElement(“img”);
+                img.className = “featured-bg-image”;
+                img.src = “”;
                 const extensions = ['webp', 'jpg', 'png', 'jpeg'];
-                const tryLoadMvp = (idx) => {
+                const tryLoadFeatured = (idx) => {
                     if (idx >= extensions.length) return;
                     const testImg = new Image();
                     testImg.onload = () => {
                         img.src = testImg.src;
-                        // 略微延迟以确保 DOM 渲染后触发 CSS 动画
                         requestAnimationFrame(() => {
-                            img.classList.add("active");
+                            img.classList.add(“active”);
                         });
                     };
-                    testImg.onerror = () => tryLoadMvp(idx + 1);
-                    testImg.src = `./pic/${band.name}1.${extensions[idx]}`;
+                    testImg.onerror = () => tryLoadFeatured(idx + 1);
+                    testImg.src = `./pic/${game.name}1.${extensions[idx]}`;
                 };
-                tryLoadMvp(0);
-                mvpContainer.appendChild(img);
+                tryLoadFeatured(0);
+                featuredContainer.appendChild(img);
             }
 
             if (!isFirst) {
                 void nameEl.offsetWidth;
-                void containerEl.offsetWidth;
+                void descContainer.offsetWidth;
+                void overallEl.offsetWidth;
             }
 
-            // 特殊动画逻辑：如果该乐队在 mvplist 中，数值动画从 0 开始缓慢放大
-            // 如果不在 mvplist 中（普通乐队），则从上一个乐队的分数平滑过渡
-            if (isFirst || isMvp) {
+            // 动画：特色游戏从0开始，普通游戏平滑过渡
+            if (isFirst || isFeatured) {
                 startScores = [...CONFIG.MIN_SCORES];
             } else {
                 startScores = [...currentScores];
             }
-            
-            targetScores = band.points.map((v, i) => Math.max(CONFIG.MIN_SCORES[i], v));
+
+            targetScores = game.grades.map(g => gradeToPosition(g));
             animProgress = 0;
             animStartTime = performance.now();
 
-            nameEl.textContent = band.name;
-            depsEl.innerHTML = band.desc;
-            
-            nameEl.style.animation = "nameEntrance 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards";
-            containerEl.style.animation = "descEntrance 1s ease-out 0.3s both";
+            nameEl.textContent = game.name;
+            descEl.textContent = game.desc;
+
+            nameEl.style.animation = “nameEntrance 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards”;
+            descContainer.style.animation = “descEntrance 1s ease-out 0.3s both”;
+            overallEl.style.animation = “overallEntrance 1.2s cubic-bezier(0.23, 1, 0.32, 1) 0.15s forwards”;
 
             // 根据配置控制介绍内容的可见性
-            containerEl.style.display = CONFIG.SHOW_DESC ? "inline-block" : "none";
+            descContainer.style.display = CONFIG.SHOW_DESC ? “inline-block” : “none”;
 
             // 优先加载 webp 格式
             const extensions = ['webp', 'jpg', 'png', 'jpeg'];
             const tryLoad = (idx) => {
                 if (idx >= extensions.length) {
-                    photoEl.style.opacity = "0";
+                    photoEl.style.opacity = “0”;
                     return;
                 }
-                const imgPath = `./pic/${band.name}.${extensions[idx]}`;
+                const imgPath = `./pic/${game.name}.${extensions[idx]}`;
                 const tempImg = new Image();
                 tempImg.onload = () => {
                     photoEl.src = imgPath;
-                    photoEl.style.opacity = "1";
-                    // 恢复正常的 3D 转换动画，不再在 transform 里应用缩放
-                    photoEl.style.transform = "rotateY(0) translateZ(0)";
+                    photoEl.style.opacity = “1”;
+                    photoEl.style.transform = “rotateY(0) translateZ(0)”;
                 };
                 tempImg.onerror = () => tryLoad(idx + 1);
                 tempImg.src = imgPath;
             };
             tryLoad(0);
-
-            // 获取当前乐队相对于当前总进度的剩余时间
-            const segment = timeSegments.find(s => s.bandIndex === bands.indexOf(band));
-            const remainingInSegment = segment.end - globalCurrentTime;
-            setProgressBar(remainingInSegment > 0 ? remainingInSegment : band.duration);
         }
 
         /**
@@ -864,52 +864,38 @@
             }
             ctx.restore();
 
-            // 激光边缘效果 - 更加激进的多重高亮叠加
+            // 雷达边缘光晕效果 - 简化为两层
             ctx.save();
             ctx.lineJoin = "round";
             ctx.lineCap = "round";
-            
-            // 1. 超宽范围的环境光晕 (辉光)
-            ctx.shadowBlur = 100; // 大幅增加辉光范围
+
+            // 1. 柔和环境光晕
+            ctx.shadowBlur = 50;
             ctx.shadowColor = currentThemeColor;
             ctx.strokeStyle = currentThemeColor;
-            ctx.lineWidth = 4;
+            ctx.lineWidth = 3;
             ctx.stroke();
 
-            // 2. 中层高饱和度激光束
-            ctx.shadowBlur = 40;
-            ctx.shadowColor = currentThemeColor;
-            ctx.strokeStyle = currentThemeColor;
-            ctx.lineWidth = 2.5;
-            ctx.stroke();
-
-            // 3. 核心亮白色高能射线
-            ctx.shadowBlur = 15;
+            // 2. 核心亮白色高光
+            ctx.shadowBlur = 10;
             ctx.shadowColor = "#fff";
             ctx.strokeStyle = "#fff";
-            ctx.lineWidth = 1.2;
+            ctx.lineWidth = 1;
             ctx.stroke();
 
-            // 4. 二次强化最亮核心 (防止偏色，增加白光质感)
-            ctx.shadowBlur = 5;
-            ctx.strokeStyle = "#fff";
-            ctx.lineWidth = 0.8;
-            ctx.stroke();
-            
             ctx.restore();
 
-            // 1600宽时留更多留白给极端数值以免被截断
-            ctx.font = 'bold 28px "Orbitron", sans-serif'; 
+            // 维度标签和评级
             ctx.fillStyle = '#fff';
             for (let i = 0; i < CONFIG.VERTEX_COUNT; i++) {
                 const angle = (i * (360 / CONFIG.VERTEX_COUNT) - 90) * Math.PI / 180;
                 let hl = dimHighlightLevels[i];
-                let marginOffset = hl * 20; // 突出的距离
+                let marginOffset = hl * 20;
                 let x = centerX + (maxR + CONFIG.LABEL_MARGIN + marginOffset) * Math.cos(angle);
                 let y = centerY + (maxR + CONFIG.LABEL_MARGIN + marginOffset) * Math.sin(angle);
                 ctx.textAlign = Math.abs(Math.cos(angle)) < 0.1 ? 'center' : (Math.cos(angle) > 0 ? 'left' : 'right');
                 ctx.textBaseline = 'middle';
-                
+
                 ctx.save();
                 if (hl > 0.01) {
                     ctx.shadowBlur = 15 + hl * 15;
@@ -917,21 +903,14 @@
                     ctx.fillStyle = "#fff";
                 }
 
-                const valStr = formatRadarValue(currentScores[i], i);
-                if (CONFIG.SHOW_SCORE_UNDER_NAME) {
-                    // 第一行：维度名
-                    const fontSizeName = CONFIG.LABEL_FONT_SIZE + hl * 12;
-                    ctx.font = `bold ${fontSizeName}px "Orbitron", "HarmonyOS Sans SC", sans-serif`;
-                    ctx.fillText(CONFIG.DIM_NAMES[i], x, y - 18 - hl * 5);
-                    // 第二行：数值 (字体稍微变细/变小一点作为区分)
-                    const fontSizeScore = CONFIG.SCORE_FONT_SIZE + hl * 12;
-                    ctx.font = `normal ${fontSizeScore}px "Orbitron", sans-serif`;
-                    ctx.fillText(valStr, x, y + 18 + hl * 5);
-                } else {
-                    const fontSize = CONFIG.LABEL_FONT_SIZE + hl * 12;
-                    ctx.font = `bold ${fontSize}px "Orbitron", "HarmonyOS Sans SC", sans-serif`;
-                    ctx.fillText(`${CONFIG.DIM_NAMES[i]} ${valStr}`, x, y);
-                }
+                const gradeLetter = getGradeLabel(i);
+                const fontSize = CONFIG.LABEL_FONT_SIZE + hl * 12;
+                // 维度名称在上
+                ctx.font = `bold ${fontSize}px "Orbitron", "HarmonyOS Sans SC", sans-serif`;
+                ctx.fillText(CONFIG.DIM_NAMES[i], x, y - 16 - hl * 4);
+                // 字母评级在下
+                ctx.font = `900 ${fontSize + 6}px "Orbitron", sans-serif`;
+                ctx.fillText(gradeLetter, x, y + 18 + hl * 4);
                 ctx.restore();
             }
             ctx.restore();
@@ -959,11 +938,11 @@
                 const progressPer = (globalCurrentTime / totalDuration) * 100;
                 globalBar.style.width = progressPer + "%";
 
-                // 检查是否需要切换乐队
+                // 检查是否需要切换游戏
                 const currentSegment = timeSegments.find(s => globalCurrentTime >= s.start && globalCurrentTime < s.end);
-                if (currentSegment && currentSegment.bandIndex !== currentIndex) {
-                    currentIndex = currentSegment.bandIndex;
-                    updateUI(bands[currentIndex], currentIndex === 0 && globalCurrentTime < 1000); 
+                if (currentSegment && currentSegment.gameIndex !== currentIndex) {
+                    currentIndex = currentSegment.gameIndex;
+                    updateUI(games[currentIndex], currentIndex === 0 && globalCurrentTime < 1000);
                 }
             }
 
@@ -1031,16 +1010,16 @@
                 const per = x / rect.width;
                 const previewTime = per * totalDuration;
                 
-                // 找到预览时间对应的乐队
+                // 找到预览时间对应的游戏
                 const previewSegment = timeSegments.find(s => previewTime >= s.start && previewTime <= s.end);
-                const previewBandName = previewSegment ? bands[previewSegment.bandIndex].name : "";
+                const previewGameName = previewSegment ? games[previewSegment.gameIndex].name : "";
 
                 const diff = Math.floor(previewTime / 1000);
                 const m = Math.floor(diff / 60).toString().padStart(2, '0');
                 const s = (diff % 60).toString().padStart(2, '0');
-                
+
                 timelineTooltip.style.left = `${e.clientX - 25}px`;
-                timelineTooltip.innerHTML = `<div style="font-size:0.7rem; opacity:0.8; font-family:'HarmonyOS Sans SC'">${previewBandName}</div>${m}:${s}`;
+                timelineTooltip.innerHTML = `<div style="font-size:0.7rem; opacity:0.8; font-family:'HarmonyOS Sans SC'">${previewGameName}</div>${m}:${s}`;
                 timelineTooltip.style.display = 'block';
             } else if (!isGlobalTimelineDragging) {
                 timelineTooltip.style.display = 'none';
@@ -1072,13 +1051,13 @@
 
             // 立即检查并切换
             const currentSegment = timeSegments.find(s => globalCurrentTime >= s.start && globalCurrentTime <= s.end);
-            if (currentSegment && currentSegment.bandIndex !== currentIndex) {
-                currentIndex = currentSegment.bandIndex;
-                updateUI(bands[currentIndex], false);
+            if (currentSegment && currentSegment.gameIndex !== currentIndex) {
+                currentIndex = currentSegment.gameIndex;
+                updateUI(games[currentIndex], false);
             }
             if (globalCurrentTime < totalDuration) {
                 isPaused = false;
-                if (audio) audio.play();
+                if (audio) audio.play().catch(() => {});
             }
         }
 
@@ -1122,20 +1101,24 @@
                 isPaused = !isPaused;
                 if (audio) {
                     if (isPaused) audio.pause();
-                    else audio.play();
+                    else audio.play().catch(() => {});
                 }
             } else if (e.key === "ArrowLeft") {
                 const nextIdx = Math.max(0, currentIndex - 1);
                 globalCurrentTime = timeSegments[nextIdx].start;
-                if (audio) audio.currentTime = globalCurrentTime / 1000;
+                if (audio) {
+                    audio.currentTime = globalCurrentTime / 1000;
+                    audio.play().catch(() => {});
+                }
                 isPaused = false;
-                if (audio) audio.play();
             } else if (e.key === "ArrowRight") {
-                const nextIdx = Math.min(bands.length - 1, currentIndex + 1);
+                const nextIdx = Math.min(games.length - 1, currentIndex + 1);
                 globalCurrentTime = timeSegments[nextIdx].start;
-                if (audio) audio.currentTime = globalCurrentTime / 1000;
+                if (audio) {
+                    audio.currentTime = globalCurrentTime / 1000;
+                    audio.play().catch(() => {});
+                }
                 isPaused = false;
-                if (audio) audio.play();
             }
         });
 
@@ -1187,9 +1170,9 @@
                 if (files.length > 0 && currentIndex >= 0) {
                     const file = files[0];
                     if (file.type.startsWith('image/')) {
-                        const currentBandName = bands[currentIndex].name;
+                        const currentGameName = games[currentIndex].name;
                         const extension = file.name.split('.').pop();
-                        const newFileName = `${currentBandName}.${extension}`;
+                        const newFileName = `${currentGameName}.${extension}`;
 
                         const reader = new FileReader();
                         reader.onload = (event) => {
