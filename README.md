@@ -1,93 +1,158 @@
-# Rock Radar - 战力雷达图 / 动态评级面板
+# Rock Radar
 
-类似jojo面板的战力评级展示系统。通过高度自定义的六维雷达图、粒子动画和流畅的视觉过渡效果，生动呈现不同角色的各项能力数值。
+一个面向视频制作的静态雷达图展示页项目，适合做“游戏前瞻 / 排行 / 评价”类内容。当前版本包含完整的开场页、雷达主展示页、CG 展示页和结尾信息页。
 
-介绍视频：https://www.bilibili.com/video/BV1vpckzhEJJ?vd_source=e933b15469ba782736f46bb7dfec1577
-![example](https://github.com/user-attachments/assets/1a9f31da-f0da-4b42-9bad-c443429b0344)
+## 当前功能
 
-## 核心特性
+- 开场页展示视频标题和 UP 主信息
+- 主页面展示 6 维雷达评分、封面图和基础信息卡
+- 每个游戏可进入单独的 CG 展示页
+- 结尾页展示 BGM 和灵感来源
+- 支持用 `game-data.js` 集中配置全部内容
 
-- 🎨 **高度通用的雷达图**：默认支持六维展示，可通过配置修改任意能力项名称。
-- 📱 **全屏以制作视频**：全屏自动隐藏鼠标和进度条，录屏即可发视频
-- ⚙️ **灵活的 CONFIG 模式**：通过简单的代码配置即可修改项目核心逻辑。
-- 🎵 **视听同步控制**：系统支持背景音乐关联播放，并配有全局时间轴进度条，可自由跳转播放位置。
-- ✨ **粒子背景交互**：内置高性能 Canvas 粒子库，渲染出富有科技感和动感的视觉背景。
+## 项目结构
 
+```text
+.
+├── index.html
+├── game-data.js
+├── intro-title.html
+├── game-cg.html
+├── ending.html
+├── pic/
+├── games/
+└── README.md
+```
 
-## 快速自定义指南
+说明：
 
-### 1. 基础全局配置
-在 `index.html` 的 `CONFIG` 对象中，你可以修改以下参数：
+- `index.html`：主页面与主要交互逻辑
+- `game-data.js`：视频信息、全局配置、游戏列表
+- `pic/`：网页实际读取的封面图和 CG 图
+- `games/`：本地内容整理目录，用来存放待导入的原始资料，不建议直接提交
+
+## 运行方式
+
+这个项目没有构建步骤，直接启动静态服务器即可：
+
+```bash
+python3 -m http.server 8000
+```
+
+然后访问：
+
+```text
+http://localhost:8000
+```
+
+## 内容配置
+
+### 1. 修改开场和结尾信息
+
+在 `game-data.js` 的 `window.VIDEO_META` 中修改：
 
 ```javascript
-const CONFIG = {
-    RADAR_SCALE: 1.0,            // 雷达图底图大小缩放比例 (默认 1.0)
-    RADAR_GRID_LEVELS: 5,        // 雷达图底图行数（圈数）
-    RADAR_GRID_LINE_WIDTH: 3,    // 雷达图底图线条粗细
-    RADAR_GRID_LINE_OPACITY: 0.2, // 雷达图底图线条透明度
-    PARTICLE_OPACITY_MULT: 2.0,  // 背景粒子特效透明度倍率
-    PARTICLE_SIZE_MULT: 2.0,     // 背景粒子特效大小倍率
-    VERTEX_COUNT: 6,             // 雷达图顶点数（默认为 6 边形，可改为 8 边形等）,一定要把DIM_NAMES等数组内容也改成对应的个数!
-    INTRO_WAIT_TIME: 5000,       // 开场页面的等待时间（毫秒）
-    
-    // 维度名称：修改这里可改变雷达图的各个能力节点名称
-    DIM_NAMES: ["创新性", "旋律", "歌词", "影响力", "主唱", "乐器"],
-    // 满分基准：设置雷达图内圈各轴建议的最大值
-    BASE_MAX_SCORES: [10, 10, 10, 10, 10, 10], 
-    // 下限设定：限制各轴显示的最低分（通常设为 0）
-    MIN_SCORES: [0, 0, 0, 0, 0, 0], 
-    // 切换显示时，雷达各项数值生长动画的过渡时间 (ms)
-    ANIM_DURATION: 1500, 
-    // 是否启用特殊的数值格式化（如雷达图的实际值在 11-19 时显示为 "10+"）
-    ENABLE_SPECIAL_FORMAT: true, 
-    // 默认每页的的展示时长 (ms)
-    DEFAULT_DURATION: 5000, 
-    // 是否显示描述文字(乐评)
-    SHOW_DESC: true,
-    // 图片默认缩放比例 (1.0 为原始大小)
-    IMAGE_SCALE: 1.0, 
-    // 哪些维度显示为百分数（例如 0.7 变为 70%）。数组长度需与顶点数对应，true 表示显示为百分数，false 表示显示为普通数字
-    USE_PERCENTAGE: [false, false, false, false, false, false],
-    // 维度名称距离雷达图外圈的距离 (px)，默认 80
-    LABEL_MARGIN: 80, 
-    // 是否根据 points 中写的小数位数自动控制显示的小数精度
-    USE_AUTO_PRECISION: true, 
-    // 是否将评分数值显示在维度名称下方
-    SHOW_SCORE_UNDER_NAME: true, 
+window.VIDEO_META = {
+    title: '7月发售黄油前瞻',
+    upName: '轩张',
+    bilibiliLabel: 'bilibili',
+    introDuration: 5000,
+    endingDuration: 8000,
+    bgm: 'Main Theme - Luis Clemente',
+    inspiration: '1.图灵坐标-浪浪妈雷达图
+2.退入电子荒原-雷达图制作教学'
 };
 ```
 
-### 2. 添加数据（角色/乐队/项目）
-在 `index.html` 中搜索并修改 `const bands = [...]`。每个对象代表一个展示页：
+### 2. 修改游戏列表
+
+每个游戏对应 `window.GAME_LIST` 数组中的一个对象。
+
+示例：
 
 ```javascript
 {
-    name: "展示名称",
-    scores: [10, 8, 9, 7, 8, 8], // 对应的六个维度分值
-    desc: "关于此项的详细描述文字",
-    colorIndex: 0, // 背景粒子的颜色，对应 COLOR_PRESETS 索引 (0-19)
-    duration: 5000  // 停留显示的时长（毫秒），不填则使用 CONFIG.DEFAULT_DURATION，默认为5000毫秒
+    name: "HOME",
+    grades: ['S', 'S', 'B', 'A', 'A', 'A'],
+    overallGrade: 'A',
+    desc: "-",
+    colorIndex: 4,
+    duration: 8000,
+    cgImages: [
+        { basePath: './pic/HOME-cg-1', alt: 'HOME CG 1' },
+        { basePath: './pic/HOME-cg-2', alt: 'HOME CG 2' }
+    ],
+    usesLargeAI: '否',
+    developer: 'SORAREVO',
+    releaseYear: '7月下旬',
+    platform: 'DLsite',
+    genre: 'SLG',
+    language: '日'
 }
 ```
-示例：
-```javascript
-{ name: "The Beatles", points: [15, 15, 10, 20, 10, 10], desc: "无需多言", colorIndex: 12 ,duration: 6000 },
+
+字段说明：
+
+- `name`：游戏名称，同时用于页面标题
+- `grades`：六维评分，顺序对应 `剧情 / 玩法 / 色气 / 体量 / 创新性 / CG质量`
+- `overallGrade`：综合评级
+- `desc`：描述文字
+- `colorIndex`：颜色预设索引
+- `duration`：主雷达页停留时间，单位毫秒
+- `cgImages`：CG 图片列表，当前页面最多显示前 2 张
+- `usesLargeAI` / `developer` / `releaseYear` / `platform` / `genre` / `language`：底部信息卡内容
+
+### 3. 图片命名规则
+
+网页默认从 `pic/` 目录读取资源。
+
+```text
+pic/游戏名.jpg
+pic/游戏名-cg-1.jpg
+pic/游戏名-cg-2.jpg
 ```
 
-### 3. 高级视觉自定义 (CSS 变量)
-在 `index.html` 的 `:root` 选择器中，你可以通过修改颜色变量快速切换主题色：
-- `--theme-color`: 主亮色（辉光色）
-- `--bg-color-1` / `--bg-color-2`: 渐变背景的起始与结束色
-- `mvplist` 见视频介绍
+如果游戏名里包含不适合直接当路径的特殊字符，可以在数据里单独指定：
 
-## 文件夹结构
+- `imageBasePath`
+- `cgImagePaths`
+
+## 从 `games/` 导入内容
+
+当前仓库支持先把原始资料整理到 `games/` 目录，再手动或脚本导入到网页数据。
+
+建议目录格式：
+
+```text
+games/
+└── 游戏1/
+    ├── 游戏1.md
+    ├── 首页.jpg
+    ├── CG1.jpg
+    └── CG2.jpg
 ```
-📁 根目录
-│
-├── 📁 pic
-│   └──  🖼️ 角色图片
-├── 📄 index.html
-└── 🎵 music.mp3
-```
-- **如何添加图片？** 根目录下创建一个pic目录，然后把图片命名为（角色/乐队/项目）名并放进去就行了。
-- **如何添加音乐？** 自行添加music.mp3。
+
+导入后：
+
+- 文本信息进入 `game-data.js`
+- 图片复制到 `pic/`
+
+## 开发说明
+
+- 这是纯静态前端项目，没有打包流程
+- 本地验证时建议检查：
+  - 开场页是否正常切入
+  - 雷达页封面和信息卡是否正常显示
+  - CG 页是否能正常加载两张图
+  - 结尾页文案是否正确换行
+
+## 提交建议
+
+不建议提交以下内容：
+
+- `node_modules/`
+- `games/` 里的原始导入资料
+- 本地验证截图、调试图片
+- 本地音频文件
+
+这些内容已经写入 `.gitignore`。

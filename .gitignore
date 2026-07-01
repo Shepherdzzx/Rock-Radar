@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Local media and generated assets
+music.mp3
+*.mp3
+
+# Local import workspace
+games/
+
+# Verification screenshots and debug captures
+*.png
+*.jpg
+*.jpeg
+*.gif
+!pic/
+!pic/**
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log

@@ -1,0 +1,18 @@
+- generic [active]:
+  - generic [ref=e1]: 00:00:15
+  - generic [ref=e31]:
+    - generic [ref=e33]: CG展示
+    - generic [ref=e34]:
+      - generic [ref=e35]:
+        - generic [ref=e36]: 未找到第 1 张 CG
+        - img [ref=e37]
+      - generic [ref=e38]:
+        - generic [ref=e39]: 未找到第 2 张 CG
+        - img [ref=e40]
+      - generic [ref=e41]:
+        - generic [ref=e42]: 未找到第 3 张 CG
+        - img [ref=e43]
+    - generic [ref=e44]:
+      - text: 按
+      - strong [ref=e45]: Esc
+      - text: 跳过并进入下一个游戏

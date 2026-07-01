@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting CG</title>
+</head>
+<body>
+    <script>
+        (function() {
+            var params = new URLSearchParams(window.location.search);
+            var resume = params.get('returnTo');
+            if (resume !== null) {
+                sessionStorage.setItem('rockRadarReturnIndex', resume);
+            }
+            var redirect = 'index.html';
+            if (resume !== null) {
+                redirect += '?resume=' + encodeURIComponent(resume);
+            }
+            window.location.replace(redirect);
+        })();
+    </script>
+</body>
+</html>

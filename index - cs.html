@@ -422,7 +422,7 @@
             // 是否根据 points 中定义的位数自动控制显示精度（例如写 8.5 就显示 8.5，写 8 就显示整数）
             USE_AUTO_PRECISION: true, 
             SHOW_SCORE_UNDER_NAME: true, // 是否将评分数值显示在维度名称下方
-            LABEL_FONT_SIZE: 28,          // 维度名称字体大小 (px)
+            LABEL_FONT_SIZE: 40,          // 维度名称字体大小 (px)
             SCORE_FONT_SIZE: 24,          // 评分数值字体大小 (px)
         };
 
@@ -1054,7 +1054,8 @@
                     document.body.classList.add("particles-disabled");
                 }
             }
-            if (e.key === " ") { // 空格暂停/播放 或 开始准备页
+            if (e.key === " " || e.code === "Space") { // 空格暂停/播放 或 开始准备页
+                e.preventDefault();
                 if (!isStarted) {
                     isStarted = true;
                     startIntroSystem(); // 开始准备系统

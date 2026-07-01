@@ -10,50 +10,65 @@
         @import url("https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/harmonyos-sans/1.1.0/style.css");
 
         :root {
-            --theme-color: #00ffff;
-            --bg-color-1: #0f1015;
-            --bg-color-2: #1a1a2e;
+            --theme-color: #4e7fc4;
+            --bg-color-1: #dbeafb;
+            --bg-color-2: #dbeafb;
+            --page-bg: #dbeafb;
+            --card-bg: #ffffff;
+            --card-border: rgba(128, 150, 183, 0.22);
+            --text-primary: #1f2d3d;
+            --text-secondary: #5f6f84;
+            --radar-grid: rgba(109, 136, 176, 0.38);
+            --radar-grid-strong: rgba(109, 136, 176, 0.62);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        body { 
-            font-family: "HarmonyOS Sans SC", "PingFang SC", "Lantinghei SC", "Microsoft YaHei", "HanHei SC", "Helvetica Neue", "Open Sans", Arial, sans-serif; 
-            overflow: hidden; 
-            background-color: #000;
-            background-image: linear-gradient(135deg, var(--bg-color-1), var(--bg-color-2), #050508, #111);
-            background-size: 400% 400%;
-            animation: gradientBG 30s ease infinite; 
-            color: #fff; 
-            transition: all 2s ease; 
+        body {
+            font-family: "HarmonyOS Sans SC", "PingFang SC", "Lantinghei SC", "Microsoft YaHei", "HanHei SC", "Helvetica Neue", "Open Sans", Arial, sans-serif;
+            overflow: hidden;
+            background-color: var(--page-bg);
+            color: var(--text-primary);
+            transition: background-color 0.6s ease, color 0.6s ease;
+        }
+
+        #pageTransitionOverlay {
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 55%),
+                linear-gradient(135deg, color-mix(in srgb, var(--page-bg) 82%, white 18%) 0%, color-mix(in srgb, var(--theme-color) 18%, var(--page-bg) 82%) 100%);
+            z-index: 1003;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #pageTransitionOverlay::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(255,255,255,0) 42%, rgba(31, 45, 61, 0.12) 100%);
         }
 
         body::before {
             content: "";
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: #000;
-            z-index: -1;
+            inset: 0;
+            background: var(--page-bg);
+            z-index: -2;
         }
 
         body.particles-disabled {
-            background-image: none !important;
-            animation: none !important;
+            /* no particles */
         }
 
         #particles-canvas {
             position: fixed;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
-            z-index: 1005; /* 初始置顶以显示粒子 */
+            z-index: 0;
             pointer-events: none;
-        }
-
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
         }
 
         .container {
@@ -63,76 +78,167 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            padding: 0;
+            padding: 1vh 1.2vw; /* 页面整体外边距：调大=整体更缩进去，调小=三大卡片更贴近屏幕边缘 */
+            transform: scale(0.97);
+            filter: blur(2px);
+            opacity: 0.75;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), filter 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.page-entered .container,
+        body.intro-sequence .container {
+            transform: scale(1);
+            filter: blur(0);
+            opacity: 1;
+        }
+
+        body.page-exiting .container {
+            transform: scale(0.97);
+            filter: blur(2px);
+            opacity: 0.75;
         }
 
         .main-layout {
             display: flex;
             flex-direction: column;
-            width: min(100vw, calc(100vh * 9 / 16));
-            height: 100vh;
+            width: min(100vw, calc(100vh * 9 / 16)); /* 竖屏主区域宽度：改这里可调整体版心宽窄 */
+            height: 100%;
             position: relative;
+            gap: 1vh; /* 三个大区块（上/中/下）之间的间距：调大更松，调小更紧凑 */
         }
 
         .top-panel {
-            flex: 0 0 40vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .middle-panel {
-            flex: 0 0 40vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            overflow: visible;
-        }
-
-        #radarCanvas {
-            width: min(90%, 37vh);
-            height: auto;
-            aspect-ratio: 1/1;
-            transform: scale(1.3);
-            max-width: 600px;
-        }
-
-        .bottom-panel {
-            flex: 1;
+            flex: 0 0 28vh; /* 顶部区域高度：调大=上方面积更多，调小=给雷达/底部腾空间 */
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 1vh 2vw;
-            gap: 1.2vh;
+            position: relative;
+            overflow: hidden;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 28px;
+            box-shadow: 0 14px 38px rgba(133, 148, 171, 0.14);
+            padding: 1.2vh 1vw; /* 顶部卡片内边距：影响宣传图离边框的距离 */
+            gap: 0;
         }
 
-        .game-name {
-            font-family: "Orbitron", "HarmonyOS Sans SC", sans-serif;
-            font-size: 2.2rem;
+        .middle-panel {
+            flex: 0 0 42vh; /* 雷达区高度：调大=雷达区更高，调小=给上/下区域腾空间 */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            position: relative;
+            overflow: visible;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 32px;
+            box-shadow: 0 18px 42px rgba(133, 148, 171, 0.12);
+            padding: 0.8vh 0.8vw 1.2vh; /* 雷达卡片内边距：调小可让雷达更贴边、更显大 */
+            gap: 0.8vh; /* 雷达图和下方标题之间的距离：调大=标题更往下，调小=标题更贴近雷达 */
+        }
+
+        #radarCanvas {
+            width: min(98%, 36vh); /* 雷达显示尺寸：最关键，调大=雷达整体更大 */
+            height: auto;
+            aspect-ratio: 1/1;
+            transform: none;
+            max-width: 920px; /* 雷达最大宽度上限：大屏下想更大就继续调高 */
+        }
+
+        .radar-title {
+            font-family: "Orbitron", "Aldrich", "Rajdhani", "HarmonyOS Sans SC", sans-serif;
+            font-size: 2.1rem; /* 雷达区标题字号：调大=雷达下方游戏名更醒目 */
             font-weight: 700;
-            color: #fff;
-            text-shadow: 0 0 8px var(--theme-color);
-            transition: all 2s ease;
-            animation: nameEntrance 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+            color: var(--text-primary);
+            text-align: center;
+            width: 100%;
+            letter-spacing: 0.08em;
+            line-height: 1.1;
+            margin-top: -2.5vh; /* 标题整体上移：改成更小/更负=更靠上，改大=更靠下 */
+            transition: opacity 0.4s ease, transform 0.4s ease; /* 雷达区标题切换淡入淡出速度 */
         }
 
-        @keyframes nameEntrance {
-            0% { opacity: 0; transform: scale(0.5) translateZ(-200px); filter: blur(10px); }
-            100% { opacity: 1; transform: scale(1) translateZ(0); filter: blur(0); }
+        .radar-disclaimer {
+            position: absolute;
+            top: 1.2vh;
+            right: 1.1vw;
+            font-family: "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+            font-size: 0.68rem;
+            color: rgba(95, 111, 132, 0.58);
+            letter-spacing: 0.4px;
+            z-index: 5;
+            pointer-events: none;
         }
+
+        .bottom-panel {
+            flex: 1; /* 底部区域剩余高度：上/中区域变小时，这里会自动变大 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: stretch;
+            padding: 0.8vh 1.2vw; /* 底部整体内边距：大字母被挤时可先调小这里 */
+            gap: 0.45vh; /* 底部各模块间距：调小更紧凑，调大更舒展 */
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 28px;
+            box-shadow: 0 14px 38px rgba(133, 148, 171, 0.12);
+        }
+
+        .info-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 底部信息卡列数：3=一行3个，两行共6个 */
+            gap: 0.8vh 1vw; /* 信息卡之间的间距 */
+            width: 100%;
+            height: 100%;
+            align-content: center;
+            transition: opacity 0.4s ease; /* 底部整组信息卡切换淡入淡出速度 */
+        }
+
+        .info-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 0;
+            padding: 1.1vh 0.9vw; /* 单个信息卡内边距：调大更舒展，调小更紧凑 */
+            border-radius: 18px; /* 单个信息卡圆角 */
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(128, 150, 183, 0.18);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
+            overflow: hidden;
+        }
+
+        .info-card-label {
+            font-family: "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+            font-size: 0.72rem; /* 信息卡标题字号（如：开发商/平台） */
+            line-height: 1.35;
+            color: var(--text-secondary);
+            margin-bottom: 0.45vh; /* 信息卡标题和内容值之间的距离 */
+        }
+
+        .info-card-value {
+            font-family: "Orbitron", "Aldrich", "HarmonyOS Sans SC", sans-serif;
+            font-size: 1.02rem; /* 信息卡内容值字号（如：是 / 2020 / PC） */
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.3;
+            word-break: break-word;
+        }
+
 
         .game-photo-container {
-            width: 90%;
-            height: 100%;
+            width: 100%;
+            flex: 1; /* 顶部图片可用高度：配合 top-panel 高度一起调整 */
+            min-height: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            perspective: 1200px;
+            border-radius: 22px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(240, 244, 248, 0.96));
+            border: 1px solid rgba(128, 150, 183, 0.16);
         }
 
         .game-photo {
@@ -140,128 +246,10 @@
             max-height: 100%;
             object-fit: contain;
             opacity: 0;
-            transform: scale(0.3) translateZ(-500px);
-            transition: opacity 1.2s ease, transform 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateY(12px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
         }
 
-        /* Grade badges row */
-        .grade-badges-row {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 1.5vw;
-            width: 100%;
-            transition: opacity 0.5s ease;
-        }
-
-        .grade-badge {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            min-width: 48px;
-        }
-
-        .grade-badge .grade-letter {
-            font-family: "Orbitron", sans-serif;
-            font-size: 1.5rem;
-            font-weight: 900;
-            color: var(--theme-color);
-            text-shadow: 0 0 10px var(--theme-color);
-            transition: all 2s ease;
-        }
-
-        .grade-badge .grade-dim-name {
-            font-size: 0.65rem;
-            color: rgba(255,255,255,0.6);
-            white-space: nowrap;
-        }
-
-        /* Overall grade display */
-        .overall-grade {
-            font-family: "Orbitron", sans-serif;
-            font-size: 3.5rem;
-            font-weight: 900;
-            color: var(--theme-color);
-            text-shadow: 0 0 20px var(--theme-color), 0 0 40px var(--theme-color);
-            transition: all 2s ease;
-            animation: overallEntrance 1.2s cubic-bezier(0.23, 1, 0.32, 1) 0.15s forwards;
-        }
-
-        @keyframes overallEntrance {
-            0% { opacity: 0; transform: scale(0.3); filter: blur(10px); }
-            100% { opacity: 1; transform: scale(1); filter: blur(0); }
-        }
-
-        .game-desc-container {
-            display: inline-block;
-            padding: 8px 20px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 8px;
-            transition: all 2s ease;
-            max-width: 90%;
-            opacity: 0;
-            animation: descEntrance 1s ease-out 0.3s both;
-        }
-
-        @keyframes descEntrance {
-            0% { opacity: 0; transform: scale(0.8) translateZ(-100px); }
-            100% { opacity: 1; transform: scale(1) translateZ(0); }
-        }
-
-        .game-desc {
-            font-size: 1.2rem;
-            line-height: 1.3;
-            color: rgba(255, 255, 255, 0.85);
-            transition: all 2s ease;
-        }
-
-        /* 底部全局进度条 */
-        .global-timeline-container {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            z-index: 100;
-            cursor: pointer;
-        }
-
-        .global-timeline-bar {
-            height: 100%;
-            background: linear-gradient(90deg, transparent, var(--theme-color));
-            width: 0%;
-            transition: width 0.1s linear, background 2s ease;
-            position: relative;
-        }
-
-        .global-timeline-bar::after {
-            content: "";
-            position: absolute;
-            right: 0; top: 50%;
-            transform: translateY(-50%);
-            width: 4px; height: 100%;
-            background: #fff;
-            box-shadow: 0 0 10px #fff;
-        }
-
-        .timeline-tooltip {
-            position: absolute;
-            bottom: 25px;
-            color: #fff;
-            padding: 5px 10px;
-            font-family: "Orbitron", "HarmonyOS Sans SC", sans-serif;
-            font-size: 0.9rem;
-            pointer-events: none;
-            display: none;
-            z-index: 101;
-            text-align: center;
-            text-shadow: 0 0 10px var(--theme-color), 0 0 5px #000;
-            white-space: pre; /* 支持换行显示显示乐队名 */
-        }
 
         /* 准备页面 */
         #introOverlay {
@@ -299,69 +287,310 @@
 
         .session-timer {
             position: fixed;
-            bottom: 20px;
-            right: 30px;
-            font-family: "Orbitron", sans-serif;
-            font-size: 0.9rem;
-            color: rgba(255,255,255,0.4);
+            top: 22px;
+            right: 26px;
+            font-family: "Orbitron", "Aldrich", sans-serif;
+            font-size: 0.82rem;
+            color: rgba(95, 111, 132, 0.8);
             letter-spacing: 2px;
             z-index: 10;
         }
 
         /* 全屏模式下的 UI 隐藏 */
         :fullscreen body { cursor: none; }
-        :fullscreen .global-timeline-container,
-        :fullscreen #globalTimeline,
         :fullscreen .session-timer {
             display: none !important;
         }
 
         .fade-out {
             opacity: 0;
-            transform: scale(0.8) translateZ(-100px);
-            transition: all 0.5s ease-in;
+            transform: translateY(12px);
+            transition: all 0.4s ease;
         }
 
         /* 特色游戏底图容器 */
         .featured-bg-container {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 1;
+            inset: 0;
+            z-index: -1;
             pointer-events: none;
             overflow: hidden;
+            display: none;
         }
 
         .featured-bg-image {
             position: absolute;
-            top: 0;
-            left: 0;
+            inset: 0;
             width: 100%;
             height: 100%;
             object-fit: contain;
             object-position: left center;
-            -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0) 100%);
-            mask-image: linear-gradient(to right, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0) 100%);
-            transition: transform 2.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 2.5s ease;
-            transform: translateX(-100%);
             opacity: 0;
         }
 
-        .featured-bg-image.active {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
+        .featured-bg-image.active,
         .featured-bg-image.exit {
-            transform: translateX(0);
             opacity: 0;
+            transform: none;
+        }
+
+        .scene {
+            position: fixed;
+            inset: 0;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            z-index: 2;
+            transition: opacity 0.4s ease, visibility 0s linear 0.4s;
+        }
+
+        .scene.scene-active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transition-delay: 0s;
+        }
+
+        .scene-radar {
+            z-index: 1;
+        }
+
+        .scene-intro,
+        .scene-cg,
+        .scene-ending {
+            z-index: 3;
+        }
+
+        .scene-intro,
+        .scene-cg,
+        .scene-ending {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scene-intro .intro-shell,
+        .scene-cg .cg-shell,
+        .scene-ending .ending-shell {
+            width: min(100vw, calc(100vh * 9 / 16));
+            height: 100vh;
+            transform: scale(0.97);
+            filter: blur(2px);
+            opacity: 0.75;
+            transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), filter 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .scene.scene-active .intro-shell,
+        .scene.scene-active .cg-shell,
+        .scene.scene-active .ending-shell {
+            transform: scale(1);
+            filter: blur(0);
+            opacity: 1;
+        }
+
+        .scene-intro .intro-shell {
+            padding: 3vh 1.2vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scene-intro .intro-card {
+            width: 100%;
+            min-height: 62vh;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 32px;
+            box-shadow: 0 18px 42px rgba(133, 148, 171, 0.12);
+            padding: 5vh 2vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3.2vh;
+            text-align: center;
+        }
+
+        .scene-intro .intro-kicker {
+            font-size: 0.88rem;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .scene-intro .intro-title {
+            font-size: clamp(1.35rem, 3.2vw, 2.4rem);
+            font-weight: 600;
+            line-height: 1.1;
+            color: var(--text-primary);
+            white-space: nowrap;
+            max-width: 100%;
+        }
+
+        .scene-intro .intro-bili {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 1vh;
+        }
+
+        .scene-intro .intro-bili-logo {
+            width: min(9vw, 52px);
+            height: auto;
+            display: block;
+            flex: 0 0 auto;
+        }
+
+        .scene-intro .intro-up {
+            font-size: 1.12rem;
+            color: var(--text-secondary);
+            line-height: 1;
+            text-align: center;
+        }
+
+        .scene-cg .cg-shell {
+            position: relative;
+            padding: 28px 24px 36px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 28px;
+            box-shadow: 0 14px 38px rgba(133, 148, 171, 0.14);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .scene-cg .cg-header {
+            flex: 0 0 8vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 4px;
+        }
+
+        .scene-cg .cg-title {
+            font-size: clamp(22px, 3vw, 34px);
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            line-height: 1;
+            color: var(--text-primary);
+        }
+
+        .scene-cg .cg-gallery {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .scene-cg .cg-slot {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border-radius: 24px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid var(--card-border);
+            box-shadow: 0 8px 24px rgba(133, 148, 171, 0.10);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scene-cg .cg-slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .scene-cg .cg-slot.is-empty {
+            border-style: dashed;
+            background: rgba(255,255,255,0.86);
+        }
+
+        .scene-cg .cg-empty {
+            padding: 0 20px;
+            text-align: center;
+            font-size: 18px;
+            letter-spacing: 0.08em;
+            color: var(--text-secondary);
+        }
+
+        .scene-cg .cg-footer {
+            flex: 0 0 auto;
+            display: flex;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .scene-cg .cg-footer strong {
+            color: var(--text-primary);
+        }
+
+        .scene-ending .ending-shell {
+            padding: 2vh 1.2vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scene-ending .ending-card {
+            width: 100%;
+            height: 100%;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 32px;
+            box-shadow: 0 18px 42px rgba(133, 148, 171, 0.12);
+            padding: 3vh 1.4vw;
+            display: flex;
+            flex-direction: column;
+            gap: 1.8vh;
+        }
+
+        .scene-ending .ending-title {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .scene-ending .ending-section {
+            background: rgba(255,255,255,0.92);
+            border: 1px solid rgba(128, 150, 183, 0.18);
+            border-radius: 22px;
+            padding: 1.6vh 1vw;
+        }
+
+        .scene-ending .ending-label {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.8vh;
+            letter-spacing: 0.08em;
+        }
+
+        .scene-ending .game-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5vh;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .scene-ending .ending-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+            white-space: pre-wrap;
         }
     </style>
 </head>
 <body>
-    <audio id="bgMusic" src="music.mp3"></audio>
+    <audio id="bgMusic"></audio>
+    <div id="pageTransitionOverlay"></div>
     <div id="introOverlay"></div>
 
     <div id="featuredBgContainer" class="featured-bg-container"></div>
@@ -369,32 +598,138 @@
     <canvas id="particles-canvas"></canvas>
     <div class="session-timer" id="sessionTimer">00:00:00</div>
 
-    <div class="container">
-        <div class="main-layout">
-            <div class="top-panel">
-                <div class="game-photo-container" id="photoContainer">
-                    <img id="gamePhoto" class="game-photo" src="" alt="">
+    <section class="scene scene-radar" id="scene-radar">
+        <div class="container">
+            <div class="main-layout">
+                <div class="top-panel">
+                    <div class="game-photo-container" id="photoContainer">
+                        <img id="gamePhoto" class="game-photo" src="" alt="">
+                    </div>
                 </div>
-            </div>
-            <div class="middle-panel">
-                <canvas id="radarCanvas" width="1600" height="1600"></canvas>
-            </div>
-            <div class="bottom-panel">
-                <div class="game-name" id="gameName"></div>
-                <div class="grade-badges-row" id="gradeBadgesRow"></div>
-                <div class="overall-grade" id="overallGrade"></div>
-                <div class="game-desc-container" id="descContainer">
-                    <div class="game-desc" id="gameDesc"></div>
+                <div class="middle-panel">
+                    <div class="radar-disclaimer">数据仅由本人主观决定</div>
+                    <canvas id="radarCanvas" width="1600" height="1600"></canvas>
+                    <div class="radar-title" id="gameName"></div>
+                </div>
+                <div class="bottom-panel">
+                    <div class="info-cards-grid" id="infoCardsGrid"></div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="global-timeline-container" id="globalTimeline">
-        <div class="global-timeline-bar" id="globalBar"></div>
-        <div class="timeline-tooltip" id="timelineTooltip">00:00</div>
-    </div>
+    <section class="scene scene-intro" id="scene-intro">
+        <div class="intro-shell">
+            <div class="intro-card">
+                <div class="intro-kicker">video intro</div>
+                <div class="intro-title" id="introTitle"></div>
+                <div class="intro-bili">
+                    <svg class="intro-bili-logo" viewBox="0 0 256 220" aria-label="bilibili logo" role="img">
+                        <rect x="44" y="54" width="168" height="122" rx="26" fill="#ff6699"></rect>
+                        <rect x="62" y="74" width="132" height="84" rx="18" fill="#ffffff"></rect>
+                        <path d="M96 24 L118 52" stroke="#ff6699" stroke-width="14" stroke-linecap="round"></path>
+                        <path d="M160 24 L138 52" stroke="#ff6699" stroke-width="14" stroke-linecap="round"></path>
+                        <path d="M98 95 L98 129" stroke="#ff6699" stroke-width="14" stroke-linecap="round"></path>
+                        <path d="M158 95 L158 129" stroke="#ff6699" stroke-width="14" stroke-linecap="round"></path>
+                        <path d="M74 178 C96 198 116 206 128 206 C140 206 160 198 182 178" stroke="#ff6699" stroke-width="14" stroke-linecap="round" fill="none"></path>
+                    </svg>
+                    <div class="intro-up" id="introUpName"></div>
+                </div>
+            </div>
+        </div>
+    </section>
 
+    <section class="scene scene-cg" id="scene-cg">
+        <div class="cg-shell">
+            <div class="cg-header">
+                <div class="cg-title">CG展示</div>
+            </div>
+            <div class="cg-gallery" id="cgGallery"></div>
+        </div>
+    </section>
+
+    <section class="scene scene-ending" id="scene-ending">
+        <div class="ending-shell">
+            <div class="ending-card">
+                <div class="ending-title">本期视频信息</div>
+                <div class="ending-section">
+                    <div class="ending-label">本次提到的游戏</div>
+                    <div class="game-list" id="endingGameList"></div>
+                </div>
+                <div class="ending-section">
+                    <div class="ending-label">BGM</div>
+                    <div class="ending-text" id="endingBgm"></div>
+                </div>
+                <div class="ending-section">
+                    <div class="ending-label">灵感来源</div>
+                    <div class="ending-text" id="endingInspiration"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <script src="./game-data.js"></script>
+    <script>
+        window.VIDEO_META = window.VIDEO_META || {
+            title: '视频标题待填写',
+            upName: 'UP主名称待填写',
+            bilibiliLabel: 'bilibili',
+            introDuration: 5000,
+            endingDuration: 8000,
+            bgm: 'BGM 待填写',
+            inspiration: '灵感来源待填写'
+        };
+
+        window.GAME_CONFIG = window.GAME_CONFIG || {
+            RADAR_SCALE: 1.15,
+            RADAR_GRID_LEVELS: 5,
+            RADAR_GRID_LINE_WIDTH: 2.4,
+            RADAR_GRID_LINE_OPACITY: 0.38,
+            PARTICLE_OPACITY_MULT: 1,
+            PARTICLE_SIZE_MULT: 1,
+            VERTEX_COUNT: 6,
+            INTRO_WAIT_TIME: 1000,
+            PAGE_TRANSITION_DURATION: 400,
+            DIM_NAMES: ["剧情", "玩法", "色气", "体量", "创新性", "CG质量"],
+            GRADE_POSITIONS: { 'S': 0.9, 'A': 0.7, 'B': 0.5, 'C': 0.3, 'D': 0.1 },
+            BASE_MAX_SCORES: [1, 1, 1, 1, 1, 1],
+            MIN_SCORES: [0, 0, 0, 0, 0, 0],
+            ANIM_DURATION: 1500,
+            DEFAULT_DURATION: 8000,
+            SHOW_DESC: false,
+            LABEL_MARGIN: 132,
+            LABEL_FONT_SIZE: 80,
+            SCORE_FONT_SIZE: 38,
+            CG_DEFAULT_DURATION: 5000,
+            IMAGE_EXTENSIONS: ['webp', 'jpg', 'png', 'jpeg']
+        };
+
+        window.GAME_LIST = window.GAME_LIST || [
+            { name: "赛博朋克2077", grades: ['A', 'B', 'A', 'S', 'B', 'S'], overallGrade: 'A', desc: "夜之城的传奇，虽有缺陷但无可替代", colorIndex: 2, duration: 8000, cgImages: [
+                { basePath: './pic/赛博朋克2077-cg-1', alt: '赛博朋克2077 CG 1' },
+                { basePath: './pic/赛博朋克2077-cg-2', alt: '赛博朋克2077 CG 2' },
+                { basePath: './pic/赛博朋克2077-cg-3', alt: '赛博朋克2077 CG 3' }
+            ], usesLargeAI: '否', developer: 'CD Projekt Red', releaseYear: '2020', platform: 'PC / PS5 / XSX', genre: '开放世界RPG', language: '中 / 英 / 日' },
+            { name: "Elden Ring", grades: ['B', 'S', 'C', 'S', 'S', 'S'], overallGrade: 'S', desc: "交界地的史诗，开放世界的标杆", colorIndex: 5, duration: 8000, cgImages: [
+                { basePath: './pic/Elden Ring-cg-1', alt: 'Elden Ring CG 1' },
+                { basePath: './pic/Elden Ring-cg-2', alt: 'Elden Ring CG 2' },
+                { basePath: './pic/Elden Ring-cg-3', alt: 'Elden Ring CG 3' }
+            ], usesLargeAI: '否', developer: 'FromSoftware', releaseYear: '2022', platform: 'PC / PS5 / XSX', genre: '魂系动作RPG', language: '中 / 英 / 日' },
+            { name: "原神", grades: ['S', 'A', 'S', 'S', 'A', 'S'], overallGrade: 'S', desc: "国产之光，持续进化的提瓦特", colorIndex: 0, duration: 8000, cgImages: [
+                { basePath: './pic/原神-cg-1', alt: '原神 CG 1' },
+                { basePath: './pic/原神-cg-2', alt: '原神 CG 2' },
+                { basePath: './pic/原神-cg-3', alt: '原神 CG 3' }
+            ], usesLargeAI: '是', developer: 'miHoYo', releaseYear: '2020', platform: 'PC / 手机 / PS5', genre: '开放世界ARPG', language: '中 / 英 / 日' },
+            { name: "守望先锋", grades: ['C', 'S', 'A', 'B', 'A', 'S'], overallGrade: 'A', desc: "英雄永存，需要更多新内容", colorIndex: 3, duration: 8000, cgImages: [
+                { basePath: './pic/守望先锋-cg-1', alt: '守望先锋 CG 1' },
+                { basePath: './pic/守望先锋-cg-2', alt: '守望先锋 CG 2' },
+                { basePath: './pic/守望先锋-cg-3', alt: '守望先锋 CG 3' }
+            ], usesLargeAI: '否', developer: 'Blizzard', releaseYear: '2016', platform: 'PC / 主机', genre: '团队FPS', language: '中 / 英 / 韩' }
+        ];
+
+        window.ROCK_RADAR_ASSETS = window.ROCK_RADAR_ASSETS || Object.freeze({});
+    </script>
     <script>
         const COLOR_PRESETS = [
             { color: "#00ffff", bg1: "#001a1a", bg2: "#000d0d" }, // 青色系
@@ -423,33 +758,7 @@
         let colorIndex = 0;
 
         // 全局配置参数
-        const CONFIG = {
-            RADAR_SCALE: 1.0,            // 雷达图底图大小缩放比例 (默认1.0)
-            RADAR_GRID_LEVELS: 5,        // 雷达图底图行数（圈数）
-            RADAR_GRID_LINE_WIDTH: 3,    // 雷达图底图线条粗细
-            RADAR_GRID_LINE_OPACITY: 0.15, // 雷达图底图线条透明度
-            PARTICLE_OPACITY_MULT: 1.2,  // 背景粒子特效透明度倍率
-            PARTICLE_SIZE_MULT: 1.2,     // 背景粒子特效大小倍率
-            VERTEX_COUNT: 6,             // 雷达图顶点数
-            INTRO_WAIT_TIME: 1000,       // 开头准备页等待时间 (ms)
-
-            // 雷达图各个维度的名称
-            DIM_NAMES: ["剧情", "玩法", "色气", "体量", "创新性", "CG质量"],
-
-            // 字母评级对应的雷达图半径比例
-            GRADE_POSITIONS: { 'S': 0.9, 'A': 0.7, 'B': 0.5, 'C': 0.3, 'D': 0.1 },
-
-            // 满分基准（统一为1，对应半径的100%）
-            BASE_MAX_SCORES: [1, 1, 1, 1, 1, 1],
-            MIN_SCORES: [0, 0, 0, 0, 0, 0],
-
-            ANIM_DURATION: 1500,         // 雷达各项数值生长动画的过渡时间 (ms)
-            DEFAULT_DURATION: 8000,      // 默认每页的展示时长 (ms)
-            SHOW_DESC: true,             // 是否显示描述文字
-            LABEL_MARGIN: 60,            // 维度名称距离雷达图外圈的距离 (px)
-            LABEL_FONT_SIZE: 24,         // 维度名称字体大小 (px)
-            SCORE_FONT_SIZE: 22,         // 评分数值字体大小 (px)
-        };
+        const CONFIG = window.GAME_CONFIG;
 
         function getNextColor() {
             const c = colorPool[colorIndex];
@@ -464,6 +773,8 @@
         }
 
         const featuredList = [];
+        const transitionDuration = CONFIG.PAGE_TRANSITION_DURATION || 400;
+        const gamelist = window.GAME_LIST;
 
         // 游戏评测数据
         // grades: [剧情, 玩法, 色气, 体量, 创新性, CG质量] 各维度字母评级 S/A/B/C/D
@@ -471,13 +782,6 @@
         // desc: 评测描述
         // colorIndex: 对应 COLOR_PRESETS 索引 (0-19)
         // duration: 该条目持续显示时间 (ms)，默认由 CONFIG.DEFAULT_DURATION 决定
-        const gamelist = [
-
-{ name: "赛博朋克2077", grades: ['A', 'B', 'A', 'S', 'B', 'S'], overallGrade: 'A', desc: "夜之城的传奇，虽有缺陷但无可替代", colorIndex: 2, duration: 8000 },
-{ name: "Elden Ring", grades: ['B', 'S', 'C', 'S', 'S', 'S'], overallGrade: 'S', desc: "交界地的史诗，开放世界的标杆", colorIndex: 5, duration: 8000 },
-{ name: "原神", grades: ['S', 'A', 'S', 'S', 'A', 'S'], overallGrade: 'S', desc: "国产之光，持续进化的提瓦特", colorIndex: 0, duration: 8000 },
-{ name: "守望先锋", grades: ['C', 'S', 'A', 'B', 'A', 'S'], overallGrade: 'A', desc: "英雄永存，需要更多新内容", colorIndex: 3, duration: 8000 },
-        ];
 
         const games = gamelist.map(g => {
             const preset = (g.colorIndex !== undefined) ? COLOR_PRESETS[g.colorIndex] : getNextColor();
@@ -502,58 +806,87 @@
         });
 
         const ANIM_DURATION = CONFIG.ANIM_DURATION;
+        const VIDEO_META = window.VIDEO_META || {};
+        const SCENES = {
+            RADAR: 'radar',
+            INTRO: 'intro',
+            CG: 'cg',
+            ENDING: 'ending'
+        };
+
+        const sceneElements = {
+            radar: document.getElementById('scene-radar'),
+            intro: document.getElementById('scene-intro'),
+            cg: document.getElementById('scene-cg'),
+            ending: document.getElementById('scene-ending')
+        };
+
+        let activeScene = SCENES.RADAR;
+        let sceneTransitionTimer = null;
+        let overlayShowTimer = null;
+        let overlayHideTimer = null;
+        let introOverlayTimer = null;
+        let introStartTimer = null;
+        let introTimer = null;
+        let cgReturnTimer = null;
+        let activeCgGameIndex = -1;
+        let activeCgReturnIndex = -1;
+        let sceneGeneration = 0;
 
         // 获取当前游戏的字母评级（用于雷达图标签显示）
-        function getGradeLabel(index) {
-            if (currentIndex !== -1 && games[currentIndex]) {
-                return games[currentIndex].grades[index];
-            }
-            return '';
-        }
-
         let currentIndex = -1;
+        let hasTriggeredCgPage = false;
         let isGlobalTimelineDragging = false;
         let globalCurrentTime = 0; // ms
-        let isParticlesEnabled = true;
-        let particleFadeLevel = 1; // 1 为完全显示，0 为完全消失
+        let isParticlesEnabled = false;
+        let particleFadeLevel = 0; // 1 为完全显示，0 为完全消失
         let isPaused = true;
         let isStarted = false; // 是否已经按过空格开始
         let lastTimestamp = 0;
+        let timelineAnchorTimestamp = 0;
 
         let currentThemeColor = "#00ffff";
-        let targetThemeColor = "#00ffff"; 
+        let targetThemeColor = "#00ffff";
         let currentScores = [...CONFIG.MIN_SCORES];
         let startScores = [...CONFIG.MIN_SCORES];
         let targetScores = [...CONFIG.MIN_SCORES];
         let animProgress = 1;
         let animStartTime = 0;
-        let startTime = Date.now();
+        let timelineStartTime = 0;
 
         let activeHighlightDim = -1;
         let dimHighlightLevels = new Array(CONFIG.VERTEX_COUNT).fill(0);
+        let hasTriggeredEndingPage = false;
+        let isResumePlayback = false;
 
         const radarCanvas = document.getElementById("radarCanvas");
         const ctx = radarCanvas.getContext("2d");
         const pCanvas = document.getElementById("particles-canvas");
-        const pCtx = pCanvas.getContext("2d");
-        const globalBar = document.getElementById("globalBar");
-        const globalTimeline = document.getElementById("globalTimeline");
-        const timelineTooltip = document.getElementById("timelineTooltip");
+        const pCtx = pCanvas ? pCanvas.getContext("2d") : null;
         let particles = [];
-        
-        function resizeCanvas() {
-            pCanvas.width = window.innerWidth;
-            pCanvas.height = window.innerHeight;
-        }
-        window.addEventListener("resize", resizeCanvas);
-        resizeCanvas();
 
+        function resizeCanvas() {
+            if (pCanvas) {
+                pCanvas.width = window.innerWidth;
+                pCanvas.height = window.innerHeight;
+            }
+        }
+        if (pCanvas) {
+            window.addEventListener("resize", resizeCanvas);
+            resizeCanvas();
+        }
+
+        document.body.classList.remove('page-entered');
         class Particle {
             constructor(type = "normal") { 
                 this.type = type; 
                 this.reset(true); 
             }
             reset(init = false) {
+                if (!pCanvas) {
+                    this.life = 0;
+                    return;
+                }
                 this.x = Math.random() * pCanvas.width;
                 this.isTop = Math.random() > 0.5;
                 this.y = this.isTop ? -100 : pCanvas.height + 100;
@@ -622,6 +955,489 @@
             return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
         }
 
+        function getGameSegmentStart(gameIndex) {
+            const segment = timeSegments.find(s => s.gameIndex === gameIndex);
+            return segment ? segment.start : 0;
+        }
+
+        function getInlineAsset(basePath) {
+            const assets = window.ROCK_RADAR_ASSETS || {};
+            const extensions = CONFIG.IMAGE_EXTENSIONS || ['webp', 'jpg', 'png', 'jpeg'];
+            for (let idx = 0; idx < extensions.length; idx++) {
+                const key = basePath + '.' + extensions[idx];
+                if (assets[key]) return assets[key];
+            }
+            return null;
+        }
+
+        function tryLoadImageWithFallback(basePath, onSuccess, onFail) {
+            const asset = getInlineAsset(basePath);
+            if (asset) {
+                onSuccess(asset);
+                return;
+            }
+
+            const extensions = CONFIG.IMAGE_EXTENSIONS || ['webp', 'jpg', 'png', 'jpeg'];
+            let current = 0;
+            const img = new Image();
+
+            img.onload = function() {
+                onSuccess(basePath + '.' + extensions[current]);
+            };
+
+            img.onerror = function() {
+                current += 1;
+                if (current >= extensions.length) {
+                    if (onFail) onFail();
+                    return;
+                }
+                img.src = basePath + '.' + extensions[current];
+            };
+
+            img.src = basePath + '.' + extensions[current];
+        }
+
+        function isAssetMissingError(error) {
+            if (!error) return false;
+            const message = String(error && error.message ? error.message : error);
+            return message.includes('Failed to load resource') || message.includes('File not found');
+        }
+
+        function nextSceneGeneration() {
+            sceneGeneration += 1;
+            return sceneGeneration;
+        }
+
+        function clearSceneTimers() {
+            if (introStartTimer) {
+                clearTimeout(introStartTimer);
+                introStartTimer = null;
+            }
+            if (introTimer) {
+                clearTimeout(introTimer);
+                introTimer = null;
+            }
+            if (cgReturnTimer) {
+                clearTimeout(cgReturnTimer);
+                cgReturnTimer = null;
+            }
+        }
+
+        function clearTransitionTimers() {
+            if (sceneTransitionTimer) {
+                clearTimeout(sceneTransitionTimer);
+                sceneTransitionTimer = null;
+            }
+            if (overlayShowTimer) {
+                clearTimeout(overlayShowTimer);
+                overlayShowTimer = null;
+            }
+            if (overlayHideTimer) {
+                clearTimeout(overlayHideTimer);
+                overlayHideTimer = null;
+            }
+            if (introOverlayTimer) {
+                clearTimeout(introOverlayTimer);
+                introOverlayTimer = null;
+            }
+        }
+
+        function clearSceneFlow() {
+            nextSceneGeneration();
+            clearSceneTimers();
+            clearTransitionTimers();
+        }
+
+        function setIntroOverlayVisible(visible) {
+            var overlay = document.getElementById('introOverlay');
+            if (!overlay) return;
+            if (introOverlayTimer) {
+                clearTimeout(introOverlayTimer);
+                introOverlayTimer = null;
+            }
+            if (visible) {
+                overlay.classList.remove('started');
+                overlay.style.display = 'flex';
+                overlay.style.opacity = '1';
+                return;
+            }
+            overlay.classList.add('started');
+            overlay.style.display = 'flex';
+            requestAnimationFrame(function() {
+                overlay.style.opacity = '0';
+            });
+            introOverlayTimer = setTimeout(function() {
+                overlay.style.display = 'none';
+                introOverlayTimer = null;
+            }, 1000);
+        }
+
+        function setActiveScene(sceneName) {
+            Object.keys(sceneElements).forEach(function(key) {
+                var el = sceneElements[key];
+                if (!el) return;
+                var isActive = key === sceneName;
+                el.classList.toggle('scene-active', isActive);
+                el.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+            });
+            activeScene = sceneName;
+        }
+
+        function playOverlayTransition(callback, generation) {
+            const overlay = document.getElementById('pageTransitionOverlay');
+            if (!overlay) {
+                if (callback) callback();
+                return;
+            }
+            if (overlayShowTimer) {
+                clearTimeout(overlayShowTimer);
+                overlayShowTimer = null;
+            }
+            if (overlayHideTimer) {
+                clearTimeout(overlayHideTimer);
+                overlayHideTimer = null;
+            }
+            overlay.style.display = 'block';
+            overlay.style.opacity = '1';
+            overlayShowTimer = setTimeout(function() {
+                overlayShowTimer = null;
+                if (generation !== sceneGeneration) return;
+                if (callback) callback();
+                requestAnimationFrame(function() {
+                    if (generation !== sceneGeneration) return;
+                    overlay.style.opacity = '0';
+                });
+                overlayHideTimer = setTimeout(function() {
+                    if (generation !== sceneGeneration) return;
+                    overlay.style.display = 'none';
+                    overlayHideTimer = null;
+                }, transitionDuration);
+            }, transitionDuration);
+        }
+
+        function applySceneBodyState(sceneName) {
+            document.body.classList.toggle('intro-sequence', sceneName === SCENES.INTRO);
+        }
+
+        function switchScene(sceneName, onEnter) {
+            if (activeScene === sceneName && !sceneTransitionTimer && !overlayShowTimer) {
+                return;
+            }
+            clearSceneFlow();
+            const generation = sceneGeneration;
+            sceneTransitionTimer = setTimeout(function() {
+                sceneTransitionTimer = null;
+                if (generation !== sceneGeneration) return;
+                playOverlayTransition(function() {
+                    if (generation !== sceneGeneration) return;
+                    setActiveScene(sceneName);
+                    applySceneBodyState(sceneName);
+                    if (onEnter) onEnter(generation);
+                }, generation);
+            }, 0);
+        }
+
+        function getGameCgImages(game) {
+            if (!game) return [];
+            if (Array.isArray(game.cgImagePaths)) {
+                return game.cgImagePaths.map(function(basePath, index) {
+                    return {
+                        basePath: basePath,
+                        alt: game.name + ' CG ' + (index + 1)
+                    };
+                });
+            }
+            if (Array.isArray(game.cgImages)) return game.cgImages;
+            const count = game.cgCount || 0;
+            return Array.from({ length: count }, function(_, index) {
+                return {
+                    basePath: './pic/' + game.name + '-cg-' + (index + 1),
+                    alt: game.name + ' CG ' + (index + 1)
+                };
+            });
+        }
+
+        function enterIntroScene(generation) {
+            if (generation !== sceneGeneration) return;
+            document.getElementById('introTitle').textContent = VIDEO_META.title || '视频标题待填写';
+            document.getElementById('introUpName').textContent = VIDEO_META.upName || 'UP主名称待填写';
+            introTimer = setTimeout(function() {
+                if (generation !== sceneGeneration || activeScene !== SCENES.INTRO) return;
+                enterRadarScene(0);
+            }, Math.max((VIDEO_META.introDuration || 5000) - transitionDuration, transitionDuration));
+        }
+
+        function applyRadarSceneState(gameIndex, radarOptions, generation) {
+            if (generation !== sceneGeneration) return;
+            var shouldResetTimeline = radarOptions.resetTimeline !== false;
+            var hasTargetGameIndex = typeof gameIndex === 'number' && gameIndex >= 0 && gameIndex < games.length;
+
+            isResumePlayback = true;
+            isStarted = true;
+            isPaused = false;
+            hasTriggeredEndingPage = false;
+            activeCgGameIndex = -1;
+            activeCgReturnIndex = -1;
+            lastTimestamp = 0;
+
+            if (shouldResetTimeline) {
+                hasTriggeredCgPage = false;
+            } else {
+                hasTriggeredCgPage = true;
+            }
+
+            if (hasTargetGameIndex) {
+                currentIndex = gameIndex;
+                globalCurrentTime = getGameSegmentStart(gameIndex);
+            } else if (shouldResetTimeline) {
+                currentIndex = -1;
+                globalCurrentTime = 0;
+            }
+
+            timelineStartTime = getNowTime() - globalCurrentTime;
+            timelineAnchorTimestamp = timelineStartTime;
+            setIntroOverlayVisible(false);
+
+            if (hasTargetGameIndex) {
+                updateUI(games[currentIndex], currentIndex === 0 && globalCurrentTime < 1000);
+            }
+            const audio = document.getElementById("bgMusic");
+            if (audio) {
+                audio.currentTime = globalCurrentTime / 1000;
+                audio.play().catch(() => {});
+            }
+            updateTimer();
+        }
+
+        function enterRadarScene(gameIndex, options) {
+            var radarOptions = options || {};
+            if (activeScene === SCENES.RADAR && !sceneTransitionTimer && !overlayShowTimer) {
+                clearSceneFlow();
+                applySceneBodyState(SCENES.RADAR);
+                setActiveScene(SCENES.RADAR);
+                applyRadarSceneState(gameIndex, radarOptions, sceneGeneration);
+                return;
+            }
+
+            switchScene(SCENES.RADAR, function(generation) {
+                applyRadarSceneState(gameIndex, radarOptions, generation);
+            });
+        }
+
+        function renderCgScene(gameIndex) {
+            const game = games[gameIndex];
+            const cgGallery = document.getElementById('cgGallery');
+            cgGallery.innerHTML = '';
+            if (!game) return Promise.resolve(false);
+
+            document.documentElement.style.setProperty('--theme-color', game.color || '#4e7fc4');
+            const cgImages = getGameCgImages(game).slice(0, 2);
+            if (!cgImages.length) {
+                return Promise.resolve(false);
+            }
+
+            return Promise.all(cgImages.map(function(imageConfig, index) {
+                return new Promise(function(resolve) {
+                    var slot = document.createElement('div');
+                    slot.className = 'cg-slot is-empty';
+                    var empty = document.createElement('div');
+                    empty.className = 'cg-empty';
+                    empty.textContent = '正在加载第 ' + (index + 1) + ' 张 CG...';
+                    var img = document.createElement('img');
+                    img.hidden = true;
+                    slot.appendChild(empty);
+                    slot.appendChild(img);
+                    cgGallery.appendChild(slot);
+
+                    tryLoadImageWithFallback(imageConfig.basePath, function(imgPath) {
+                        img.src = imgPath;
+                        img.alt = imageConfig.alt || (game.name + ' CG ' + (index + 1));
+                        img.hidden = false;
+                        empty.hidden = true;
+                        slot.classList.remove('is-empty');
+                        resolve(true);
+                    }, function() {
+                        empty.textContent = '未找到第 ' + (index + 1) + ' 张 CG';
+                        slot.classList.remove('is-empty');
+                        resolve(false);
+                    });
+                });
+            })).then(function(results) {
+                return results.some(Boolean);
+            });
+        }
+
+        function enterCgScene(gameIndex) {
+            activeCgGameIndex = gameIndex;
+            activeCgReturnIndex = Math.min(gameIndex + 1, games.length - 1);
+            isPaused = true;
+            timelineStartTime = 0;
+            timelineAnchorTimestamp = 0;
+            switchScene(SCENES.CG, function(generation) {
+                if (generation !== sceneGeneration) return;
+                renderCgScene(gameIndex).then(function(hasImages) {
+                    if (generation !== sceneGeneration || activeScene !== SCENES.CG || activeCgGameIndex !== gameIndex) {
+                        return;
+                    }
+                    var delay = CONFIG.CG_DEFAULT_DURATION || games[gameIndex].duration || CONFIG.DEFAULT_DURATION;
+                    cgReturnTimer = setTimeout(function() {
+                        if (generation !== sceneGeneration || activeScene !== SCENES.CG) return;
+                        if (gameIndex >= games.length - 1) {
+                            openEndingPage();
+                            return;
+                        }
+                        const nextIndex = activeCgReturnIndex;
+                        isPaused = false;
+                        setActiveScene(SCENES.RADAR);
+                        applySceneBodyState(SCENES.RADAR);
+                        activeScene = SCENES.RADAR;
+                        hasTriggeredEndingPage = false;
+                        activeCgGameIndex = -1;
+                        activeCgReturnIndex = -1;
+                        lastTimestamp = 0;
+                        globalCurrentTime = getGameSegmentStart(nextIndex);
+                        currentIndex = nextIndex;
+                        hasTriggeredCgPage = false;
+                        timelineStartTime = getNowTime() - globalCurrentTime;
+                        timelineAnchorTimestamp = timelineStartTime;
+                        updateUI(games[nextIndex], false);
+                        const audio = document.getElementById("bgMusic");
+                        if (audio) {
+                            audio.currentTime = globalCurrentTime / 1000;
+                            audio.play().catch(() => {});
+                        }
+                        updateTimer();
+                    }, delay);
+                });
+            });
+        }
+
+        function enterEndingScene() {
+            switchScene(SCENES.ENDING, function(generation) {
+                if (generation !== sceneGeneration) return;
+                const gameListEl = document.getElementById('endingGameList');
+                const bgmEl = document.getElementById('endingBgm');
+                const inspirationEl = document.getElementById('endingInspiration');
+                gameListEl.innerHTML = '';
+                games.forEach(function(game) {
+                    var item = document.createElement('div');
+                    item.textContent = game.name;
+                    gameListEl.appendChild(item);
+                });
+                bgmEl.textContent = VIDEO_META.bgm || 'BGM 待填写';
+                inspirationEl.textContent = VIDEO_META.inspiration || '灵感来源待填写';
+                isPaused = true;
+                timelineStartTime = 0;
+                timelineAnchorTimestamp = 0;
+                const audio = document.getElementById("bgMusic");
+                if (audio) audio.pause();
+            });
+        }
+
+        function shouldOpenCgPage(game) {
+            return getGameCgImages(game).length > 0;
+        }
+
+        function openCgPage(gameIndex) {
+            if (gameIndex < 0 || gameIndex >= games.length) return;
+            const game = games[gameIndex];
+            if (!shouldOpenCgPage(game)) {
+                hasTriggeredCgPage = true;
+                return;
+            }
+
+            hasTriggeredCgPage = true;
+            enterCgScene(gameIndex);
+        }
+
+        function openEndingPage() {
+            if (hasTriggeredEndingPage) return;
+            hasTriggeredEndingPage = true;
+            enterEndingScene();
+        }
+
+        function playPageEnterTransition() {
+            var pageOverlay = document.getElementById('pageTransitionOverlay');
+            document.body.classList.remove('page-exiting');
+            document.body.classList.remove('intro-sequence');
+            document.body.classList.add('page-entered');
+            if (!pageOverlay) return;
+            pageOverlay.style.display = 'block';
+            pageOverlay.style.opacity = '1';
+            requestAnimationFrame(function() {
+                pageOverlay.style.opacity = '0';
+            });
+            setTimeout(function() {
+                pageOverlay.style.display = 'none';
+            }, transitionDuration);
+        }
+
+        function enterStandbyScene() {
+            clearSceneFlow();
+            setActiveScene(SCENES.RADAR);
+            document.body.classList.remove('intro-sequence');
+            isPaused = true;
+            isStarted = false;
+            isResumePlayback = false;
+            globalCurrentTime = 0;
+            currentIndex = -1;
+            hasTriggeredCgPage = false;
+            hasTriggeredEndingPage = false;
+            activeCgGameIndex = -1;
+            activeCgReturnIndex = -1;
+            timelineStartTime = 0;
+            timelineAnchorTimestamp = 0;
+            const audio = document.getElementById("bgMusic");
+            if (audio) audio.pause();
+            updateTimer();
+
+            var nameEl = document.getElementById('gameName');
+            var infoCardsGrid = document.getElementById('infoCardsGrid');
+            var photoEl = document.getElementById('gamePhoto');
+            if (nameEl) nameEl.textContent = '';
+            if (infoCardsGrid) infoCardsGrid.innerHTML = '';
+            if (photoEl) {
+                photoEl.removeAttribute('src');
+                photoEl.style.opacity = '0';
+                photoEl.style.transform = 'translateY(12px)';
+            }
+
+            setIntroOverlayVisible(true);
+        }
+
+        function restorePlaybackState() {
+            const params = new URLSearchParams(window.location.search);
+            const fromIntro = params.get('from') === 'intro';
+            const resumeValue = params.get('resume');
+            const storedReturnIndex = sessionStorage.getItem('rockRadarReturnIndex');
+
+            if (storedReturnIndex !== null) {
+                sessionStorage.removeItem('rockRadarReturnIndex');
+                const resumeIndex = parseInt(storedReturnIndex, 10);
+                enterRadarScene(Number.isNaN(resumeIndex) ? 0 : Math.min(Math.max(resumeIndex, 0), games.length - 1), { resetTimeline: false });
+                return true;
+            }
+
+            if (fromIntro) {
+                isStarted = true;
+                isPaused = true;
+                isResumePlayback = false;
+                setIntroOverlayVisible(false);
+                switchScene(SCENES.INTRO, function(generation) {
+                    enterIntroScene(generation);
+                });
+                return true;
+            }
+
+            if (resumeValue !== null) {
+                const resumeIndex = parseInt(resumeValue, 10);
+                enterRadarScene(Number.isNaN(resumeIndex) ? 0 : Math.min(Math.max(resumeIndex, 0), games.length - 1), { resetTimeline: false });
+                return true;
+            }
+
+            return false;
+        }
+
         function updateTimer() {
             let diff = Math.floor(globalCurrentTime / 1000);
             let h = Math.floor(diff / 3600).toString().padStart(2, '0');
@@ -630,9 +1446,13 @@
             document.getElementById("sessionTimer").textContent = `${h}:${m}:${s}`;
         }
 
-        function setProgressBar(duration) {
-            // 进度条已移除，保留空函数以防其他地方调用
+        function getNowTime() {
+            if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+                return performance.now();
+            }
+            return Date.now();
         }
+
 
         /**
          * 调度并执行UI的淡出过渡，然后调用核心切换逻辑
@@ -640,96 +1460,77 @@
          * @param {boolean} isFirst - 是否是初始首次加载
          */
         function updateUI(game, isFirst = false) {
-            const nameEl = document.getElementById(“gameName”);
-            const descContainer = document.getElementById(“descContainer”);
-            const overallEl = document.getElementById(“overallGrade”);
-            const badgesRow = document.getElementById(“gradeBadgesRow”);
-            const photoEl = document.getElementById(“gamePhoto”);
+            var nameEl = document.getElementById('gameName');
+            var infoCardsGrid = document.getElementById('infoCardsGrid');
+            var photoEl = document.getElementById('gamePhoto');
 
             if (!isFirst) {
                 nameEl.style.animation = 'none';
-                descContainer.style.animation = 'none';
-                overallEl.style.animation = 'none';
-                nameEl.classList.add(“fade-out”);
-                descContainer.classList.add(“fade-out”);
-                overallEl.classList.add(“fade-out”);
-                badgesRow.style.opacity = “0”;
-                photoEl.style.transform = “scale(0.3) translateZ(-500px)”;
-                photoEl.style.opacity = “0”;
+                nameEl.classList.add('fade-out');
+                infoCardsGrid.style.opacity = '0';
+                photoEl.style.transform = 'translateY(12px)';
+                photoEl.style.opacity = '0';
 
-                setTimeout(() => {
+                setTimeout(function() {
                     performTransition(game, isFirst);
-                }, 500);
+                }, 400);
             } else {
                 performTransition(game, isFirst);
             }
         }
 
-        /**
-         * 核心的视图与数据切换：更换文字、图片加载、应用主题色及计算雷达图目标分数
-         * @param {Object} game - 即将展示的游戏数据对象
-         * @param {boolean} isFirst - 是否是初始首次加载
-         */
         function performTransition(game, isFirst) {
-            const nameEl = document.getElementById(“gameName”);
-            const descEl = document.getElementById(“gameDesc”);
-            const descContainer = document.getElementById(“descContainer”);
-            const overallEl = document.getElementById(“overallGrade”);
-            const badgesRow = document.getElementById(“gradeBadgesRow”);
-            const photoEl = document.getElementById(“gamePhoto”);
-            const featuredContainer = document.getElementById(“featuredBgContainer”);
+            var nameEl = document.getElementById('gameName');
+            var infoCardsGrid = document.getElementById('infoCardsGrid');
+            var photoEl = document.getElementById('gamePhoto');
+            var featuredContainer = document.getElementById('featuredBgContainer');
 
             targetThemeColor = game.color;
             document.documentElement.style.setProperty('--theme-color', game.color);
             document.documentElement.style.setProperty('--bg-color-1', game.bg1);
             document.documentElement.style.setProperty('--bg-color-2', game.bg2);
 
-            nameEl.classList.remove(“fade-out”);
-            descContainer.classList.remove(“fade-out”);
-            overallEl.classList.remove(“fade-out”);
+            nameEl.classList.remove('fade-out');
+            infoCardsGrid.innerHTML = '';
 
-            // 填充评级徽章
-            badgesRow.innerHTML = '';
-            CONFIG.DIM_NAMES.forEach((dimName, i) => {
-                const badge = document.createElement('div');
-                badge.className = 'grade-badge';
-                badge.innerHTML = `
-                    <span class=”grade-letter”>${game.grades[i]}</span>
-                    <span class=”grade-dim-name”>${dimName}</span>
-                `;
-                badgesRow.appendChild(badge);
+            var cardDefs = [
+                { label: '是否使用大规模AI', value: game.usesLargeAI },
+                { label: '开发商', value: game.developer },
+                { label: '发行年份', value: game.releaseYear },
+                { label: '平台', value: game.platform },
+                { label: '游戏类型', value: game.genre },
+                { label: '语言支持', value: game.language }
+            ];
+
+            cardDefs.forEach(function(def) {
+                var card = document.createElement('div');
+                card.className = 'info-card';
+                card.innerHTML = '<div class="info-card-label">' + def.label + '</div>' +
+                                 '<div class="info-card-value">' + def.value + '</div>';
+                infoCardsGrid.appendChild(card);
             });
-            badgesRow.style.opacity = “1”;
+            infoCardsGrid.style.opacity = '1';
 
-            // 总体评级
-            overallEl.textContent = game.overallGrade;
-
-            // 特色游戏底图逻辑
-            const isFeatured = featuredList.includes(game.name);
-            const oldFeaturedImg = featuredContainer.querySelector(“.featured-bg-image.active”);
+                var isFeatured = featuredList.includes(game.name);
+                var oldFeaturedImg = featuredContainer.querySelector('.featured-bg-image.active');
 
             if (oldFeaturedImg) {
-                oldFeaturedImg.classList.remove(“active”);
-                oldFeaturedImg.classList.add(“exit”);
-                setTimeout(() => oldFeaturedImg.remove(), 2000);
+                oldFeaturedImg.classList.remove('active');
+                oldFeaturedImg.classList.add('exit');
+                setTimeout(function() { oldFeaturedImg.remove(); }, 2000);
             }
 
             if (isFeatured) {
-                const img = document.createElement(“img”);
-                img.className = “featured-bg-image”;
-                img.src = “”;
-                const extensions = ['webp', 'jpg', 'png', 'jpeg'];
-                const tryLoadFeatured = (idx) => {
-                    if (idx >= extensions.length) return;
-                    const testImg = new Image();
-                    testImg.onload = () => {
-                        img.src = testImg.src;
-                        requestAnimationFrame(() => {
-                            img.classList.add(“active”);
-                        });
-                    };
-                    testImg.onerror = () => tryLoadFeatured(idx + 1);
-                    testImg.src = `./pic/${game.name}1.${extensions[idx]}`;
+                var img = document.createElement('img');
+                img.className = 'featured-bg-image';
+                img.src = '';
+                var tryLoadFeatured = function(idx) {
+                    var asset = getInlineAsset('./pic/' + game.name + '1');
+                    if (!asset) return;
+                    img.src = asset;
+                    requestAnimationFrame(function() {
+                        img.classList.add('active');
+                    });
                 };
                 tryLoadFeatured(0);
                 featuredContainer.appendChild(img);
@@ -737,71 +1538,65 @@
 
             if (!isFirst) {
                 void nameEl.offsetWidth;
-                void descContainer.offsetWidth;
-                void overallEl.offsetWidth;
             }
 
-            // 动画：特色游戏从0开始，普通游戏平滑过渡
             if (isFirst || isFeatured) {
-                startScores = [...CONFIG.MIN_SCORES];
+                startScores = [].concat(CONFIG.MIN_SCORES);
             } else {
-                startScores = [...currentScores];
+                startScores = [].concat(currentScores);
             }
 
-            targetScores = game.grades.map(g => gradeToPosition(g));
+            targetScores = game.grades.map(function(g) { return gradeToPosition(g); });
             animProgress = 0;
             animStartTime = performance.now();
 
             nameEl.textContent = game.name;
-            descEl.textContent = game.desc;
+            nameEl.style.animation = 'none';
 
-            nameEl.style.animation = “nameEntrance 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards”;
-            descContainer.style.animation = “descEntrance 1s ease-out 0.3s both”;
-            overallEl.style.animation = “overallEntrance 1.2s cubic-bezier(0.23, 1, 0.32, 1) 0.15s forwards”;
-
-            // 根据配置控制介绍内容的可见性
-            descContainer.style.display = CONFIG.SHOW_DESC ? “inline-block” : “none”;
-
-            // 优先加载 webp 格式
-            const extensions = ['webp', 'jpg', 'png', 'jpeg'];
-            const tryLoad = (idx) => {
-                if (idx >= extensions.length) {
-                    photoEl.style.opacity = “0”;
-                    return;
-                }
-                const imgPath = `./pic/${game.name}.${extensions[idx]}`;
-                const tempImg = new Image();
-                tempImg.onload = () => {
-                    photoEl.src = imgPath;
-                    photoEl.style.opacity = “1”;
-                    photoEl.style.transform = “rotateY(0) translateZ(0)”;
-                };
-                tempImg.onerror = () => tryLoad(idx + 1);
-                tempImg.src = imgPath;
-            };
-            tryLoad(0);
+            var imageBasePath = game.imageBasePath || ('./pic/' + game.name);
+            tryLoadImageWithFallback(imageBasePath, function(imgPath) {
+                photoEl.src = imgPath;
+                photoEl.style.opacity = '1';
+                photoEl.style.transform = 'translateY(0)';
+            }, function() {
+                photoEl.style.opacity = '0';
+            });
         }
 
         /**
          * 负责在 Canvas 上绘制六维雷达图、背景网格、连接线及其光晕特效
          */
         function drawRadar() {
-            const w = radarCanvas.width;   
-            const h = radarCanvas.height;  
+            const w = radarCanvas.width;
+            const h = radarCanvas.height;
             const centerX = w / 2;
             const centerY = h / 2;
-            
-            const maxR = 1000 * 0.4 * CONFIG.RADAR_SCALE; 
+
+            const maxR = 1000 * 0.36 * CONFIG.RADAR_SCALE; // 雷达主体半径：配合 RADAR_SCALE 一起控制雷达大小
+            const outerPlateR = maxR + CONFIG.LABEL_MARGIN + 92; // 雷达浅色底板外圈大小
 
             ctx.clearRect(0, 0, w, h);
             ctx.save();
+
+            // 雷达信息卡底板
+            const plateGradient = ctx.createRadialGradient(centerX, centerY, maxR * 0.15, centerX, centerY, outerPlateR);
+            plateGradient.addColorStop(0, 'rgba(255,255,255,0.96)');
+            plateGradient.addColorStop(1, 'rgba(242,246,250,0.98)');
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, outerPlateR, 0, Math.PI * 2);
+            ctx.fillStyle = plateGradient;
+            ctx.shadowBlur = 0;
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(151, 170, 198, 0.24)';
+            ctx.stroke();
+
             ctx.lineWidth = CONFIG.RADAR_GRID_LINE_WIDTH;
 
-            // 背景网格 (固定10级基础刻度)，每层都按每个维度的满分计算半径比例
-            for (let layer = 1; layer <= CONFIG.RADAR_GRID_LEVELS; layer++) {
+            // 背景网格
+            for (let layer = CONFIG.RADAR_GRID_LEVELS; layer >= 1; layer--) {
                 ctx.beginPath();
                 for (let i = 0; i < CONFIG.VERTEX_COUNT; i++) {
-                    // grid表示满分的比例，比如第10层即 10/10 = 1倍的maxR
                     const r = (layer / CONFIG.RADAR_GRID_LEVELS) * maxR;
                     const angle = (i * (360 / CONFIG.VERTEX_COUNT) - 90) * Math.PI / 180;
                     const x = centerX + r * Math.cos(angle);
@@ -809,8 +1604,9 @@
                     if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 }
                 ctx.closePath();
-                // 最外层网格线增强2.5倍以突出边界感
-                ctx.strokeStyle = `rgba(255, 255, 255, ${layer === CONFIG.RADAR_GRID_LEVELS ? CONFIG.RADAR_GRID_LINE_OPACITY * 2.5 : CONFIG.RADAR_GRID_LINE_OPACITY})`;
+                ctx.fillStyle = layer % 2 === 0 ? 'rgba(129, 154, 191, 0.045)' : 'rgba(255, 255, 255, 0.35)';
+                ctx.fill();
+                ctx.strokeStyle = layer === CONFIG.RADAR_GRID_LEVELS ? 'rgba(109, 136, 176, 0.62)' : 'rgba(109, 136, 176, 0.38)';
                 ctx.stroke();
             }
 
@@ -820,17 +1616,35 @@
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
                 ctx.lineTo(centerX + maxR * Math.cos(angle), centerY + maxR * Math.sin(angle));
-                ctx.strokeStyle = `rgba(255, 255, 255, ${CONFIG.RADAR_GRID_LINE_OPACITY})`;
+                ctx.strokeStyle = 'rgba(121, 145, 180, 0.32)';
+                ctx.lineWidth = 1.6;
                 ctx.stroke();
             }
 
-            // 雷达多边形 (允许超出 maxR，每个维度的基准线单独映射配置)
+            // 轴向刻度
+            for (let layer = 1; layer <= CONFIG.RADAR_GRID_LEVELS; layer++) {
+                const r = (layer / CONFIG.RADAR_GRID_LEVELS) * maxR;
+                for (let i = 0; i < CONFIG.VERTEX_COUNT; i++) {
+                    const angle = (i * (360 / CONFIG.VERTEX_COUNT) - 90) * Math.PI / 180;
+                    const x = centerX + r * Math.cos(angle);
+                    const y = centerY + r * Math.sin(angle);
+                    const perpAngle = angle + Math.PI / 2;
+                    const tickSize = layer === CONFIG.RADAR_GRID_LEVELS ? 7 : 5;
+                    ctx.beginPath();
+                    ctx.moveTo(x - tickSize * Math.cos(perpAngle), y - tickSize * Math.sin(perpAngle));
+                    ctx.lineTo(x + tickSize * Math.cos(perpAngle), y + tickSize * Math.sin(perpAngle));
+                    ctx.strokeStyle = 'rgba(121, 145, 180, 0.26)';
+                    ctx.lineWidth = 1.2;
+                    ctx.stroke();
+                }
+            }
+
+            // 雷达多边形
             ctx.beginPath();
             let polyPoints = [];
             for (let i = 0; i < CONFIG.VERTEX_COUNT; i++) {
                 const dimMaxScore = CONFIG.BASE_MAX_SCORES[i];
                 const dimMinScore = CONFIG.MIN_SCORES[i];
-                // 根据 MIN_SCORES 计算有效显示范围，MIN_SCORES 对应原点 (0%位置)
                 const range = Math.max(0.0001, dimMaxScore - dimMinScore);
                 const r = ((currentScores[i] - dimMinScore) / range) * maxR;
                 const angle = (i * (360 / CONFIG.VERTEX_COUNT) - 90) * Math.PI / 180;
@@ -840,77 +1654,71 @@
                 if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
             }
             ctx.closePath();
-            
-            // 基础填充 (稍微增强一点存在感)
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = hexToRgbA(currentThemeColor, 0.25);
+
+            const polygonGradient = ctx.createLinearGradient(centerX, centerY - maxR, centerX, centerY + maxR);
+            polygonGradient.addColorStop(0, hexToRgbA(currentThemeColor, 0.34));
+            polygonGradient.addColorStop(1, hexToRgbA(currentThemeColor, 0.18));
+            ctx.fillStyle = polygonGradient;
             ctx.fill();
 
-            // 顶点强调内部发光（限制在多边形内部）
+            // 顶点强调内部发光（浅色风格弱化）
             ctx.save();
-            ctx.clip(); // 限制后续绘制只在多边形内
+            ctx.clip();
             for (let i = 0; i < CONFIG.VERTEX_COUNT; i++) {
                 let hl = dimHighlightLevels[i];
                 if (hl > 0.01) {
                     const pt = polyPoints[i];
-                    // 在对应顶点处绘制径向渐变光晕
-                    const glowRadius = maxR * 0.8 * hl;
+                    const glowRadius = maxR * 0.38 * hl;
                     const grad = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, glowRadius);
-                    grad.addColorStop(0, hexToRgbA(currentThemeColor, 0.8 * hl));
+                    grad.addColorStop(0, hexToRgbA(currentThemeColor, 0.22 * hl));
                     grad.addColorStop(1, hexToRgbA(currentThemeColor, 0));
                     ctx.fillStyle = grad;
-                    ctx.fill(); 
+                    ctx.fill();
                 }
             }
             ctx.restore();
 
-            // 雷达边缘光晕效果 - 简化为两层
+            // 雷达边缘描边
             ctx.save();
-            ctx.lineJoin = "round";
-            ctx.lineCap = "round";
-
-            // 1. 柔和环境光晕
-            ctx.shadowBlur = 50;
-            ctx.shadowColor = currentThemeColor;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.shadowBlur = 0;
             ctx.strokeStyle = currentThemeColor;
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 5;
             ctx.stroke();
-
-            // 2. 核心亮白色高光
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = "#fff";
-            ctx.strokeStyle = "#fff";
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(255,255,255,0.72)';
+            ctx.lineWidth = 1.5;
             ctx.stroke();
-
             ctx.restore();
 
-            // 维度标签和评级
-            ctx.fillStyle = '#fff';
+            // 顶点 marker
+            polyPoints.forEach((pt) => {
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, 9, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = currentThemeColor;
+                ctx.stroke();
+            });
+
+            // 维度标签
+            ctx.fillStyle = '#1f2d3d';
             for (let i = 0; i < CONFIG.VERTEX_COUNT; i++) {
                 const angle = (i * (360 / CONFIG.VERTEX_COUNT) - 90) * Math.PI / 180;
                 let hl = dimHighlightLevels[i];
-                let marginOffset = hl * 20;
+                let marginOffset = hl * 10;
                 let x = centerX + (maxR + CONFIG.LABEL_MARGIN + marginOffset) * Math.cos(angle);
                 let y = centerY + (maxR + CONFIG.LABEL_MARGIN + marginOffset) * Math.sin(angle);
                 ctx.textAlign = Math.abs(Math.cos(angle)) < 0.1 ? 'center' : (Math.cos(angle) > 0 ? 'left' : 'right');
                 ctx.textBaseline = 'middle';
 
                 ctx.save();
-                if (hl > 0.01) {
-                    ctx.shadowBlur = 15 + hl * 15;
-                    ctx.shadowColor = currentThemeColor;
-                    ctx.fillStyle = "#fff";
-                }
-
-                const gradeLetter = getGradeLabel(i);
-                const fontSize = CONFIG.LABEL_FONT_SIZE + hl * 12;
-                // 维度名称在上
-                ctx.font = `bold ${fontSize}px "Orbitron", "HarmonyOS Sans SC", sans-serif`;
-                ctx.fillText(CONFIG.DIM_NAMES[i], x, y - 16 - hl * 4);
-                // 字母评级在下
-                ctx.font = `900 ${fontSize + 6}px "Orbitron", sans-serif`;
-                ctx.fillText(gradeLetter, x, y + 18 + hl * 4);
+                const fontSize = CONFIG.LABEL_FONT_SIZE + hl * 4;
+                ctx.font = `500 ${fontSize}px "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif`; // 雷达外围维度文字实时字号（使用更稳定可加载的中文字体方案）
+                ctx.fillStyle = '#31445c';
+                ctx.letterSpacing = '1px';
+                ctx.fillText(CONFIG.DIM_NAMES[i], x, y);
                 ctx.restore();
             }
             ctx.restore();
@@ -922,27 +1730,62 @@
          * @param {number} timestamp - 配合requestAnimationFrame注入的当前帧高精时间戳
          */
         function tick(timestamp) {
+            requestAnimationFrame(tick);
+
             if (!lastTimestamp) lastTimestamp = timestamp;
             const deltaTime = timestamp - lastTimestamp;
             lastTimestamp = timestamp;
 
-            // 1. 全局进度逻辑
+            if (activeScene !== SCENES.RADAR) {
+                updateTimer();
+                return;
+            }
+
+            if (!isResumePlayback && !isStarted) {
+                updateTimer();
+                return;
+            }
+
             if (!isPaused && globalCurrentTime < totalDuration) {
-                globalCurrentTime += deltaTime;
+                const now = getNowTime();
+                if (!timelineStartTime) {
+                    timelineStartTime = now - globalCurrentTime;
+                }
+                globalCurrentTime = Math.max(0, now - timelineStartTime);
                 if (globalCurrentTime >= totalDuration) {
                     globalCurrentTime = totalDuration;
                     isPaused = true; // 播放结束
-                }
+                    timelineStartTime = 0;
+                    timelineAnchorTimestamp = 0;
+                    openEndingPage();
+                } else {
+                    // 检查是否需要切换游戏
+                    const currentSegment = timeSegments.find(s => globalCurrentTime >= s.start && globalCurrentTime < s.end);
+                    if (currentSegment && currentSegment.gameIndex !== currentIndex) {
+                        currentIndex = currentSegment.gameIndex;
+                        hasTriggeredCgPage = false;
+                        updateUI(games[currentIndex], currentIndex === 0 && globalCurrentTime < 1000);
+                    }
 
-                // 更新全局进度条展示
-                const progressPer = (globalCurrentTime / totalDuration) * 100;
-                globalBar.style.width = progressPer + "%";
-
-                // 检查是否需要切换游戏
-                const currentSegment = timeSegments.find(s => globalCurrentTime >= s.start && globalCurrentTime < s.end);
-                if (currentSegment && currentSegment.gameIndex !== currentIndex) {
-                    currentIndex = currentSegment.gameIndex;
-                    updateUI(games[currentIndex], currentIndex === 0 && globalCurrentTime < 1000);
+                    if (currentIndex >= 0 && !hasTriggeredCgPage && !hasTriggeredEndingPage) {
+                        const currentGame = games[currentIndex];
+                        const currentSegment = timeSegments[currentIndex];
+                        const currentSegmentEnd = currentSegment ? currentSegment.end : totalDuration;
+                        if (currentGame && shouldOpenCgPage(currentGame) && globalCurrentTime >= currentSegmentEnd - 120) {
+                            openCgPage(currentIndex);
+                            return;
+                        }
+                        if (currentSegment && globalCurrentTime >= currentSegmentEnd - 120) {
+                            const nextIndex = currentIndex + 1;
+                            hasTriggeredCgPage = true;
+                            if (nextIndex >= games.length) {
+                                openEndingPage();
+                            } else {
+                                enterRadarScene(nextIndex, { resetTimeline: false });
+                            }
+                            return;
+                        }
+                    }
                 }
             }
 
@@ -986,83 +1829,48 @@
             }
             drawRadar();
             updateTimer();
-            requestAnimationFrame(tick);
-        }
-
-        // 全局进度条拖动逻辑
-        globalTimeline.addEventListener('mouseenter', () => {
-             timelineTooltip.style.display = 'block';
-        });
-
-        globalTimeline.addEventListener('mousedown', (e) => {
-            isGlobalTimelineDragging = true;
-            timelineTooltip.style.display = 'block';
-            updateGlobalTimeFromClick(e);
-        });
-
-        window.addEventListener('mousemove', (e) => {
-            // 获取相对于 timeline 的坐标
-            const rect = globalTimeline.getBoundingClientRect();
-            const isInTimeline = (e.clientY >= rect.top && e.clientY <= rect.bottom);
-            
-            if (isInTimeline || isGlobalTimelineDragging) {
-                const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
-                const per = x / rect.width;
-                const previewTime = per * totalDuration;
-                
-                // 找到预览时间对应的游戏
-                const previewSegment = timeSegments.find(s => previewTime >= s.start && previewTime <= s.end);
-                const previewGameName = previewSegment ? games[previewSegment.gameIndex].name : "";
-
-                const diff = Math.floor(previewTime / 1000);
-                const m = Math.floor(diff / 60).toString().padStart(2, '0');
-                const s = (diff % 60).toString().padStart(2, '0');
-
-                timelineTooltip.style.left = `${e.clientX - 25}px`;
-                timelineTooltip.innerHTML = `<div style="font-size:0.7rem; opacity:0.8; font-family:'HarmonyOS Sans SC'">${previewGameName}</div>${m}:${s}`;
-                timelineTooltip.style.display = 'block';
-            } else if (!isGlobalTimelineDragging) {
-                timelineTooltip.style.display = 'none';
-            }
-
-            if (isGlobalTimelineDragging) updateGlobalTimeFromClick(e);
-        });
-
-        globalTimeline.addEventListener('mouseleave', () => {
-            if (!isGlobalTimelineDragging) timelineTooltip.style.display = 'none';
-        });
-
-        window.addEventListener('mouseup', () => {
-            isGlobalTimelineDragging = false;
-            timelineTooltip.style.display = 'none';
-        });
-
-        function updateGlobalTimeFromClick(e) {
-            const rect = globalTimeline.getBoundingClientRect();
-            const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
-            const per = x / rect.width;
-            globalCurrentTime = per * totalDuration;
-            
-            // 同步音频进度
-            const audio = document.getElementById("bgMusic");
-            if (audio && audio.duration) {
-                audio.currentTime = (globalCurrentTime / 1000) % audio.duration;
-            }
-
-            // 立即检查并切换
-            const currentSegment = timeSegments.find(s => globalCurrentTime >= s.start && globalCurrentTime <= s.end);
-            if (currentSegment && currentSegment.gameIndex !== currentIndex) {
-                currentIndex = currentSegment.gameIndex;
-                updateUI(games[currentIndex], false);
-            }
-            if (globalCurrentTime < totalDuration) {
-                isPaused = false;
-                if (audio) audio.play().catch(() => {});
-            }
         }
 
         window.addEventListener("keydown", (e) => {
-            // 数字键强调效果 (1-8 键，0 键取消)
+            const audio = document.getElementById("bgMusic");
+
+            if (e.key === "f" || e.key === "F" || e.key === "F11") {
+                if (e.key === "F11") e.preventDefault();
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+                return;
+            }
+
+            if (e.key.toLowerCase() === 'p') {
+                isParticlesEnabled = !isParticlesEnabled;
+                document.body.classList.toggle("particles-disabled", !isParticlesEnabled);
+                return;
+            }
+
+            if (activeScene === SCENES.CG) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    enterRadarScene(activeCgReturnIndex, { resetTimeline: false });
+                }
+                return;
+            }
+
+            if (activeScene === SCENES.ENDING) {
+                return;
+            }
+
+            if (activeScene === SCENES.INTRO) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    clearSceneTimers();
+                    enterRadarScene(0);
+                }
+                return;
+            }
+
             if (e.key >= '1' && e.key <= '8') {
                 const dimIndex = parseInt(e.key) - 1;
                 if (dimIndex < CONFIG.VERTEX_COUNT) {
@@ -1072,66 +1880,70 @@
                 activeHighlightDim = -1;
             }
 
-            if (e.key === "f" || e.key === "F" || e.key === "F11") {
-                // 如果是 F11，阻止默认行为以使用我们自定义的全屏逻辑控制 UI 隐藏
-                if (e.key === "F11") e.preventDefault();
-                
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen();
-                } else {
-                    if (document.exitFullscreen) document.exitFullscreen();
-                }
-            }
-
-            const audio = document.getElementById("bgMusic");
-            if (e.key.toLowerCase() === 'p') {
-                isParticlesEnabled = !isParticlesEnabled;
-                if (isParticlesEnabled) {
-                    document.body.classList.remove("particles-disabled");
-                } else {
-                    document.body.classList.add("particles-disabled");
-                }
-            }
-            if (e.key === " ") { // 空格暂停/播放 或 开始准备页
+            if (e.key === " " || e.code === "Space") {
+                e.preventDefault();
                 if (!isStarted) {
-                    isStarted = true;
-                    startIntroSystem(); // 开始准备系统
+                    startIntroSystem();
                     return;
                 }
                 isPaused = !isPaused;
+                if (!isPaused) {
+                    timelineStartTime = getNowTime() - globalCurrentTime;
+                    timelineAnchorTimestamp = timelineStartTime;
+                    lastTimestamp = 0;
+                } else {
+                    timelineStartTime = 0;
+                    timelineAnchorTimestamp = 0;
+                }
                 if (audio) {
                     if (isPaused) audio.pause();
                     else audio.play().catch(() => {});
                 }
             } else if (e.key === "ArrowLeft") {
                 const nextIdx = Math.max(0, currentIndex - 1);
-                globalCurrentTime = timeSegments[nextIdx].start;
+                hasTriggeredCgPage = false;
+                globalCurrentTime = getGameSegmentStart(nextIdx);
                 if (audio) {
                     audio.currentTime = globalCurrentTime / 1000;
                     audio.play().catch(() => {});
                 }
+                timelineStartTime = getNowTime() - globalCurrentTime;
+                timelineAnchorTimestamp = timelineStartTime;
+                lastTimestamp = 0;
                 isPaused = false;
             } else if (e.key === "ArrowRight") {
                 const nextIdx = Math.min(games.length - 1, currentIndex + 1);
-                globalCurrentTime = timeSegments[nextIdx].start;
+                hasTriggeredCgPage = false;
+                globalCurrentTime = getGameSegmentStart(nextIdx);
                 if (audio) {
                     audio.currentTime = globalCurrentTime / 1000;
                     audio.play().catch(() => {});
                 }
+                timelineStartTime = getNowTime() - globalCurrentTime;
+                timelineAnchorTimestamp = timelineStartTime;
+                lastTimestamp = 0;
                 isPaused = false;
             }
         });
 
         function startIntroSystem() {
             const audio = document.getElementById("bgMusic");
-            const overlay = document.getElementById("introOverlay");
-            const pCanvas = document.getElementById("particles-canvas");
 
-            // 移除提示文字
-            overlay.classList.add("started"); 
+            clearSceneFlow();
+            const generation = sceneGeneration;
+            isStarted = true;
+            isPaused = true;
+            isResumePlayback = false;
+            document.body.classList.add('intro-sequence');
+            setIntroOverlayVisible(true);
 
-            // 在等待 3 秒期间，静默“播放再暂停”以绕过浏览器策略，但不发出声音
             if (audio) {
+                const bgMusicAsset = (window.ROCK_RADAR_ASSETS || {})['music.mp3'];
+                if (bgMusicAsset) {
+                    audio.src = bgMusicAsset;
+                }
+                audio.pause();
+                audio.currentTime = 0;
                 audio.muted = true;
                 audio.play().then(() => {
                     audio.pause();
@@ -1140,23 +1952,21 @@
                 }).catch(e => console.log("Audio prep failed", e));
             }
 
-            setTimeout(() => {
-                overlay.style.opacity = "0";
-                isPaused = false; 
-                pCanvas.style.zIndex = "0"; 
-
-                if (audio) {
-                    audio.play().catch(e => console.log("Audio play failed", e));
-                }
-                setTimeout(() => {
-                    overlay.style.display = "none";
-                }, 1000);
+            introStartTimer = setTimeout(() => {
+                if (generation !== sceneGeneration) return;
+                setIntroOverlayVisible(false);
+                switchScene(SCENES.INTRO, function(sceneToken) {
+                    enterIntroScene(sceneToken);
+                });
             }, CONFIG.INTRO_WAIT_TIME);
         }
 
         window.onload = function() {
-            // 在正式播放前就开始渲染粒子和雷达（静态背景）
             requestAnimationFrame(tick);
+            playPageEnterTransition();
+            if (!restorePlaybackState()) {
+                enterStandbyScene();
+            }
 
             // 拖拽图片下载功能
             window.addEventListener('dragover', (e) => {

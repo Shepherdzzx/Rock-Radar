@@ -1,0 +1,9 @@
+- generic [ref=e2]:
+  - generic [ref=e4]: CG展示
+  - generic [ref=e5]:
+    - generic [ref=e7]: 未找到第 1 张 CG
+    - generic [ref=e9]: 未找到第 2 张 CG
+  - generic [ref=e10]:
+    - text: 按
+    - strong [ref=e11]: Esc
+    - text: 跳过并进入下一个游戏

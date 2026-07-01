@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transition Verification Recorder</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 24px; background: #111; color: #eee; }
+    button { padding: 10px 16px; font-size: 16px; }
+    pre { white-space: pre-wrap; background: #1b1b1b; padding: 16px; border-radius: 8px; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <button id="run">Run verification</button>
+  <pre id="log">idle</pre>
+  <script>
+    const logEl = document.getElementById('log');
+    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    function captureFrame(win, label) {
+      const overlay = win.document.getElementById('pageTransitionOverlay');
+      const content = win.document.querySelector('.container, .ending-shell, .intro-shell');
+      const overlayStyle = overlay ? win.getComputedStyle(overlay) : null;
+      const contentStyle = content ? win.getComputedStyle(content) : null;
+      return {
+        label,
+        url: win.location.href,
+        bodyClass: win.document.body.className,
+        overlay: overlayStyle ? {
+          opacity: overlayStyle.opacity,
+          display: overlayStyle.display,
+          visibility: overlayStyle.visibility
+        } : null,
+        content: contentStyle ? {
+          opacity: contentStyle.opacity,
+          transform: contentStyle.transform,
+          filter: contentStyle.filter
+        } : null
+      };
+    }
+
+    async function recordFlow(url, checkpoints) {
+      const iframe = document.createElement('iframe');
+      iframe.style.width = '1280px';
+      iframe.style.height = '720px';
+      iframe.style.border = '0';
+      iframe.style.position = 'absolute';
+      iframe.style.left = '-99999px';
+      document.body.appendChild(iframe);
+      const samples = [];
+
+      await new Promise((resolve) => {
+        iframe.onload = resolve;
+        iframe.src = url;
+      });
+
+      for (const point of checkpoints) {
+        await wait(point.delay);
+        samples.push(captureFrame(iframe.contentWindow, point.label));
+      }
+
+      iframe.remove();
+      return samples;
+    }
+
+    async function run() {
+      const introSamples = await recordFlow('http://127.0.0.1:4173/intro-title.html', [
+        { label: 'intro-initial', delay: 0 },
+        { label: 'intro-before-transition', delay: 4300 },
+        { label: 'intro-transition-mid', delay: 250 },
+        { label: 'index-enter-50ms', delay: 450 },
+        { label: 'index-enter-300ms', delay: 250 },
+        { label: 'index-enter-650ms', delay: 350 }
+      ]);
+
+      const endingSamples = await recordFlow('http://127.0.0.1:4173/index.html?resume=3', [
+        { label: 'last-radar-enter-50ms', delay: 50 },
+        { label: 'last-radar-before-ending', delay: 7000 },
+        { label: 'ending-enter-50ms', delay: 500 },
+        { label: 'ending-enter-300ms', delay: 250 },
+        { label: 'ending-enter-650ms', delay: 350 }
+      ]);
+
+      const result = { introSamples, endingSamples };
+      logEl.textContent = JSON.stringify(result, null, 2);
+      window.__verificationResult = result;
+    }
+
+    document.getElementById('run').addEventListener('click', () => {
+      logEl.textContent = 'running...';
+      run().catch(err => {
+        logEl.textContent = String(err && err.stack || err);
+        window.__verificationError = String(err && err.stack || err);
+      });
+    });
+  </script>
+</body>
+</html>
